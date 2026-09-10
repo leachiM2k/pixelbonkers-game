@@ -7,7 +7,7 @@ export const PNG_SPRITE_KEYS: string[] = [
   "arena_sky",
   "menu_title",
   "arena_bench", "arena_bush", "arena_flower_0", "arena_flower_1",
-  "arena_grass_0", "arena_grass_1", "arena_grass_2", "arena_lamp",
+  "arena_grass_0", "arena_grass_1", "arena_grass_2", "arena_house", "arena_lamp",
   "arena_trashcan", "arena_tree", "arena_platform", "boy1_attack_0", "boy1_attack_1",
   "boy1_attack_2", "boy1_attack_3", "boy1_duck_0", "boy1_fall_0",
   "boy1_hit_0", "boy1_hit_1", "boy1_idle_0", "boy1_idle_1",
