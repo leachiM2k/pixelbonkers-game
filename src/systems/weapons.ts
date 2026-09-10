@@ -96,10 +96,17 @@ export class WeaponSystem {
   }
 
   update(delta: number): void {
-    this.spawnInMs -= delta;
-    if (this.spawnInMs <= 0) {
+    // Mindestbestand: ist GAR KEINE Waffe im Spiel (Boden/Flug/Falle/Hand), faellt sofort nach
+    const heldCount = this.players.filter((p) => p.heldWeapon).length;
+    if (this.weapons.length + this.projectiles.length + this.traps.length + heldCount === 0) {
       this.spawnRandomWeapon();
       this.spawnInMs = SPAWN_MIN_MS + Math.random() * SPAWN_VAR_MS;
+    } else {
+      this.spawnInMs -= delta;
+      if (this.spawnInMs <= 0) {
+        this.spawnRandomWeapon();
+        this.spawnInMs = SPAWN_MIN_MS + Math.random() * SPAWN_VAR_MS;
+      }
     }
     for (let i = this.weapons.length - 1; i >= 0; i--) {
       const w = this.weapons[i];
