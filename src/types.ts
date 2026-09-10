@@ -100,7 +100,7 @@ export const WEAPON_IDS: WeaponId[] = Object.keys(WEAPONS) as WeaponId[];
 //   boy2 analog mit eigenen Shirt-/Schuh-Farben.
 // Waffen (16x16): 'wpn_<weaponId>' z.B. 'wpn_plunger'
 // Waffen-Flug (rotiert per code, gleiche Textur)
-// HUD: 'hud_portrait_1', 'hud_portrait_2', 'hud_heart', 'hud_heart_empty', 'hud_bar_frame', 'hud_bar_fill', 'hud_vs'
+// HUD: 'hud_panel' (Komplett-Panel), 'hud_heart', 'hud_heart_empty' (Overlay-Zustaende)
 // Font: 'font_<CHAR>' für A-Z, 0-9, '!', '?', ':', '.', '-', '>', '(' , ')', '/', ' ' (Leerzeichen als 1px breite Textur)
 // Arena: 'arena_sky'(384x216), 'arena_cloud_0..2', 'arena_tree', 'arena_bush', 'arena_bench',
 //   'arena_trashcan', 'arena_lamp', 'arena_flower', 'arena_bird_0','arena_bird_1', 'arena_leaf',

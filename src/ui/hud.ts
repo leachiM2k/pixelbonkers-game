@@ -2,10 +2,16 @@ import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from '../types';
 import { createPixelText } from './pixelText';
 
-// HUD-Vertrag (META -> COMBAT), Signaturen GEFROREN:
+// HUD-Vertrag (META -> COMBAT), signaturen GEFROREN:
 // new Hud(scene); updateHp(idx, hp); updateTimer(seconds);
 // showPickupPrompt(idx, text); hidePickupPrompt(idx);
 // showCenterText(text, color?); clearCenterText(); roundResult(winnerIdx)
+//
+// Optik: Komplett-Panel hud_panel.png (575x105 nativ) als Bild,
+// Portraets/Labels/VS/TIME/Rahmen sind gebacken. Dynamisch obendrauf:
+// HP-Fuellung (plus dunkle Verlustzone + Abdeckung der rote Spitze),
+// Herzen-Zustaende und die Timer-Ziffern (gebackene '60' ausgestanzt).
+// Asset-Koordinaten (575er-Raster) * PANEL_SCALE = Spielfeld-Koordinaten.
 
 const COLOR_WHITE = 0xf2f0e5;
 const COLOR_GOLD = 0xf8d848;
@@ -13,10 +19,31 @@ const COLOR_DARK = 0x1a1c2c;
 const HP_GREEN = 0x28d84a;
 const HP_YELLOW = 0xffd83a;
 const HP_RED = 0xf84838;
+const PANEL_DARK = 0x0c1117;
 const MAX_HP = 100;
-const BAR_FILL_W = 58;
 const HUD_DEPTH = 50;
 const OVERLAY_DEPTH = 100;
+
+/** hud_panel.png nativ 575x105, Anzeige 384 breit. */
+const PANEL_SCALE = GAME_WIDTH / 575;
+const S = PANEL_SCALE;
+
+// Asset-Koordinaten (575er-Raster), deterministisch aus dem PNG vermessen:
+// - Balken-Innenraum (farbige Zone): P1 x 96..237, P2 x 339..480, y 15..23
+// - rote 'Spitzen' des Sample-Zustands ragen bis y 12 hoch (P1 x 207..237, P2 x 339..355)
+// - Herzen: P1 x [74..93, 100..120, 126..145], P2 x [484..504, 457..477, 430..451], y 37..54
+// - Ziffern-Fenster (ausgestanzt): x 268..314, y 70..93
+const BAR_ZONE: Array<{ x1: number; x2: number; pokeX1: number; pokeX2: number }> = [
+  { x1: 96, x2: 237, pokeX1: 207, pokeX2: 237 },
+  { x1: 339, x2: 480, pokeX1: 339, pokeX2: 355 },
+];
+const BAR_Y = 15, BAR_H = 9, POKE_Y = 12, POKE_H = 3;
+const HEART_BOXES: Array<Array<[number, number]>> = [
+  [[74, 93], [100, 120], [126, 145]],
+  [[484, 504], [457, 477], [430, 451]],
+];
+const HEART_Y = 37, HEART_H = 18;
+const DIGITS_X = 291, DIGITS_Y = 81.5;
 
 function hpColor(hp: number): number {
   if (hp > 50) return HP_GREEN;
@@ -28,44 +55,48 @@ class PlayerSlot {
   private hp = MAX_HP;
   private readonly hearts: Phaser.GameObjects.Image[] = [];
   private shakeTween: Phaser.Tweens.Tween | null = null;
-  private readonly baseFrameX: number;
-  private readonly baseFillX: number;
+  private readonly barX: number;
+  private readonly barW: number;
 
   constructor(
     private scene: Phaser.Scene,
-    private frame: Phaser.GameObjects.Image,
-    private fill: Phaser.GameObjects.Image,
+    private left: boolean,
+    private fill: Phaser.GameObjects.Rectangle,
+    private lost: Phaser.GameObjects.Rectangle,
   ) {
-    this.baseFrameX = frame.x;
-    this.baseFillX = fill.x;
+    this.barX = fill.x;
+    this.barW = fill.width;
   }
 
   static build(scene: Phaser.Scene, idx: 0 | 1): PlayerSlot {
     const left = idx === 0;
-    const originX = left ? 0 : 1;
-    const px = left ? 4 : GAME_WIDTH - 20;
-    const tx = left ? 24 : GAME_WIDTH - 24;
-    const barX = left ? 24 : GAME_WIDTH - 88;
-    const heartX = left ? 24 : GAME_WIDTH - 31;
+    const zone = BAR_ZONE[idx];
+    const fullW = (zone.x2 - zone.x1 + 1) * S;
+    const anchorX = (left ? zone.x1 : zone.x2) * S;
 
-    const portrait = scene.add.image(px, 2, `hud_portrait_${idx + 1}`).setOrigin(0, 0);
-    portrait.setDepth(HUD_DEPTH);
-    createPixelText(scene, tx, 3, `P${idx + 1}`, { scale: 1, originX, color: COLOR_GOLD }).setDepth(HUD_DEPTH);
-    createPixelText(scene, tx, 11, `PLAYER ${idx + 1}`, { scale: 1, originX, color: COLOR_WHITE }).setDepth(HUD_DEPTH);
+    // Abdeckung der hochragenden roten Spitze (Sample-Zustand des Assets)
+    scene.add
+      .rectangle(zone.pokeX1 * S, POKE_Y * S,
+        (zone.pokeX2 - zone.pokeX1 + 1) * S, POKE_H * S, PANEL_DARK)
+      .setOrigin(0, 0)
+      .setDepth(HUD_DEPTH);
 
-    const frame = scene.add.image(barX, 20, 'hud_bar_frame').setOrigin(0, 0);
-    frame.setDepth(HUD_DEPTH);
-    const fill = scene
-      .add.image(left ? barX + 3 : barX + 61, 22, 'hud_bar_fill')
-      .setOrigin(left ? 0 : 1, 0);
-    fill.setDepth(HUD_DEPTH);
+    const lost = scene.add
+      .rectangle(anchorX, BAR_Y * S, 0, BAR_H * S, PANEL_DARK)
+      .setOrigin(left ? 0 : 1, 0)
+      .setDepth(HUD_DEPTH);
+    const fill = scene.add
+      .rectangle(anchorX, BAR_Y * S, fullW, BAR_H * S, HP_GREEN)
+      .setOrigin(left ? 0 : 1, 0)
+      .setDepth(HUD_DEPTH);
 
-    const slot = new PlayerSlot(scene, frame, fill);
-    for (let i = 0; i < 3; i++) {
-      const heart = scene
-        .add.image(heartX + i * 9 * (left ? 1 : -1), 30, 'hud_heart')
-        .setOrigin(0, 0);
-      heart.setDepth(HUD_DEPTH);
+    const slot = new PlayerSlot(scene, left, fill, lost);
+    for (const [hx1, hx2] of HEART_BOXES[idx]) {
+      const heart = scene.add
+        .image(hx1 * S, HEART_Y * S, 'hud_heart')
+        .setOrigin(0, 0)
+        .setDisplaySize((hx2 - hx1 + 1) * S, HEART_H * S)
+        .setDepth(HUD_DEPTH);
       slot.hearts.push(heart);
     }
     slot.setHp(MAX_HP, false);
@@ -76,19 +107,20 @@ class PlayerSlot {
     const v = Phaser.Math.Clamp(hp, 0, MAX_HP);
     const damaged = v < this.hp;
     this.hp = v;
-    this.fill.setDisplaySize(Math.round((v / MAX_HP) * BAR_FILL_W), 4);
-    this.fill.setTint(hpColor(v));
+    const fillW = Math.max(0, Math.round((v / MAX_HP) * this.barW));
+    this.fill.width = fillW;
+    this.lost.width = Math.max(0, this.barW - fillW);
+    this.fill.setFillStyle(hpColor(v));
     const count = Math.ceil(v / 34);
     this.hearts.forEach((h, i) => h.setTexture(i < count ? 'hud_heart' : 'hud_heart_empty'));
     if (damaged && flash) {
-      this.fill.setTintFill(0xffffff);
-      this.scene.time.delayedCall(70, () => this.fill.setTint(hpColor(this.hp)));
+      this.fill.setFillStyle(0xffffff);
+      this.scene.time.delayedCall(70, () => this.fill.setFillStyle(hpColor(this.hp)));
       this.shakeTween?.remove();
-      this.frame.x = this.baseFrameX;
-      this.fill.x = this.baseFillX;
+      this.fill.x = this.barX;
       this.scene.tweens.add({
-        targets: [this.frame, this.fill],
-        x: '+=2',
+        targets: [this.fill, this.lost],
+        x: `+=${this.left ? 2 : -2}`,
         duration: 40,
         yoyo: true,
         repeat: 2,
@@ -114,11 +146,8 @@ export class Hud {
   private resultTween: Phaser.Tweens.Tween | null = null;
 
   constructor(private scene: Phaser.Scene) {
+    scene.add.image(0, 0, 'hud_panel').setOrigin(0, 0).setDisplaySize(GAME_WIDTH, 105 * S).setDepth(HUD_DEPTH);
     this.slots = [PlayerSlot.build(scene, 0), PlayerSlot.build(scene, 1)];
-
-    const vs = scene.add.image(GAME_WIDTH / 2 - 12, 3, 'hud_vs').setOrigin(0, 0);
-    vs.setDepth(HUD_DEPTH);
-    createPixelText(scene, GAME_WIDTH / 2, 18, 'TIME', { scale: 1, originX: 0.5, color: COLOR_WHITE }).setDepth(HUD_DEPTH);
     this.updateTimer(60);
   }
 
@@ -135,12 +164,12 @@ export class Hud {
     this.timerText?.destroy();
     this.timerText = null;
     const low = s <= 10;
-    this.timerText = createPixelText(this.scene, GAME_WIDTH / 2, 27, String(s).padStart(2, '0'), {
+    this.timerText = createPixelText(this.scene, DIGITS_X * S, DIGITS_Y * S, String(s).padStart(2, '0'), {
       scale: 2,
       originX: 0.5,
       color: low ? HP_RED : COLOR_GOLD,
     });
-    this.timerText.setDepth(HUD_DEPTH);
+    this.timerText.setDepth(HUD_DEPTH + 1);
     if (low) {
       this.timerTween = this.scene.tweens.add({
         targets: this.timerText,
