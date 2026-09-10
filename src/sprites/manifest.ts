@@ -22,7 +22,7 @@ export const PNG_SPRITE_KEYS: string[] = [
   "boy2_ko_2", "boy2_run_0", "boy2_run_1", "boy2_run_2",
   "boy2_run_3", "boy2_throw_0", "boy2_throw_1", "boy2_throw_2",
   "boy2_victory_0", "boy2_victory_1", "boy2_walk_0", "boy2_walk_1",
-  "boy2_walk_2", "boy2_walk_3",   "hud_heart", "hud_heart_empty", "hud_panel",
+  "boy2_walk_2", "boy2_walk_3",   "hud_heart", "hud_heart_empty", "hud_player1", "hud_player2", "hud_vs",
   "wpn_banana",
   "wpn_fryingPan", "wpn_pillow", "wpn_plunger", "wpn_rubberBoot",
   "wpnp_plunger", "wpnp_rubberChicken", "wpnp_banana", "wpnp_pillow",
