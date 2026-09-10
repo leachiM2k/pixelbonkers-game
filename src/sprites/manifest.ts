@@ -5,6 +5,7 @@
 // Arena-Deko + HUD: PNGs in Matrix-Mass (Anzeige via hud.ts scale 1 / deco() scale 2).
 export const PNG_SPRITE_KEYS: string[] = [
   "arena_sky",
+  "menu_logo", "menu_subtitle",
   "arena_bench", "arena_bush", "arena_flower_0", "arena_flower_1",
   "arena_grass_0", "arena_grass_1", "arena_grass_2", "arena_lamp",
   "arena_trashcan", "arena_tree", "boy1_attack_0", "boy1_attack_1",

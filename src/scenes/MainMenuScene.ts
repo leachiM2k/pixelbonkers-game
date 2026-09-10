@@ -15,28 +15,27 @@ import type { NetBattleConfig, NetSession } from '../net/contract';
 const COLOR_WHITE = 0xf2f0e5;
 const COLOR_GOLD = 0xf8d848;
 const COLOR_DARK = 0x1a1c2c;
-const COLOR_RED = 0xe04848;
-const COLOR_GREEN = 0x28d84a;
 
 type ToggleKey = 'sound' | 'music' | 'screenShake' | 'melee';
 
 interface MenuItem {
   label: () => string;
   run: () => void;
+  status?: () => boolean;
 }
 
 export class MainMenuScene extends Phaser.Scene {
   private audio!: AudioSystem;
   private controls!: ControlsScreen;
   private items: MenuItem[] = [];
-  private itemTexts: Phaser.GameObjects.Container[] = [];
-  private cursor!: Phaser.GameObjects.Image;
+  private rowObjects: Array<Phaser.GameObjects.Rectangle | Phaser.GameObjects.Container> = [];
+  private footerTexts: Phaser.GameObjects.Container[] = [];
+  private pressEnter: Phaser.GameObjects.Container | null = null;
   private selection = 0;
   private menuMode: 'main' | 'settings' = 'main';
   private coinText: Phaser.GameObjects.Container | null = null;
   private coinTween: Phaser.Tweens.Tween | null = null;
   private showCredits = false;
-  private subtitle: Phaser.GameObjects.Container | null = null;
   private onlineMenu: OnlineMenu | null = null;
   private netFactory: NetSessionFactoryLike = createNetSessionFactory();
 
@@ -45,8 +44,6 @@ export class MainMenuScene extends Phaser.Scene {
   };
 
   private readonly menuX = 150;
-  private readonly menuBaseY = 76;
-  private readonly menuStep = 11;
 
   constructor() {
     super('MainMenuScene');
@@ -72,8 +69,7 @@ export class MainMenuScene extends Phaser.Scene {
       host: (cb) => this.netFactory.host(cb),
       join: (code, cb) => this.netFactory.join(code, cb),
     });
-    this.itemTexts = [];
-    this.subtitle = null;
+    this.rowObjects = [];
     this.coinText = null;
     this.coinTween = null;
 
@@ -125,35 +121,36 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private buildTitle(): void {
-    const title = this.add.container(GAME_WIDTH / 2, 14);
-    title.add(
-      createPixelText(this, 4, 4, 'PIXEL BONKERS', { scale: 4, originX: 0.5, color: COLOR_DARK }),
-    );
-    title.add(
-      createPixelText(this, 0, 0, 'PIXEL BONKERS', { scale: 4, originX: 0.5, color: COLOR_GOLD }),
-    );
+    // Logo aus dem Original-Sheet (Fallback: PixelText-Titel)
+    if (this.textures.exists('menu_logo')) {
+      const logo = this.add.image(GAME_WIDTH / 2, 10, 'menu_logo');
+      logo.setOrigin(0.5, 0);
+      if (this.textures.exists('menu_subtitle')) {
+        this.add.image(GAME_WIDTH / 2, 54, 'menu_subtitle').setOrigin(0.5, 0);
+      } else {
+        createPixelText(this, GAME_WIDTH / 2, 54, '2 PLAYER MAYHEM', { scale: 1, originX: 0.5, color: COLOR_WHITE });
+      }
+    } else {
+      const title = this.add.container(GAME_WIDTH / 2, 14);
+      title.add(
+        createPixelText(this, 4, 4, 'PIXEL BONKERS', { scale: 4, originX: 0.5, color: COLOR_DARK }),
+      );
+      title.add(
+        createPixelText(this, 0, 0, 'PIXEL BONKERS', { scale: 4, originX: 0.5, color: COLOR_GOLD }),
+      );
+      createPixelText(this, GAME_WIDTH / 2, 54, '2 PLAYER MAYHEM', {
+        scale: 1,
+        originX: 0.5,
+        color: COLOR_WHITE,
+      });
+    }
 
-    this.subtitle = createPixelText(this, GAME_WIDTH / 2, 50, '2 PLAYER MAYHEM', {
+    const pressEnter = createPixelText(this, GAME_WIDTH / 2, 79, 'PRESS ENTER', {
       scale: 1,
       originX: 0.5,
       color: COLOR_WHITE,
     });
-    const subColors = [COLOR_WHITE, COLOR_GOLD, COLOR_RED, COLOR_GREEN];
-    let ci = 0;
-    this.time.addEvent({
-      delay: 700,
-      loop: true,
-      callback: () => {
-        ci = (ci + 1) % subColors.length;
-        this.tintText(this.subtitle, subColors[ci]);
-      },
-    });
-
-    const pressEnter = createPixelText(this, GAME_WIDTH / 2, 62, 'PRESS ENTER', {
-      scale: 1,
-      originX: 0.5,
-      color: COLOR_WHITE,
-    });
+    this.pressEnter = pressEnter;
     this.tweens.add({ targets: pressEnter, alpha: 0, duration: 450, yoyo: true, repeat: -1 });
   }
 
@@ -168,21 +165,24 @@ export class MainMenuScene extends Phaser.Scene {
 
   private settingsItems(): MenuItem[] {
     return [
-      { label: () => `SOUND: ${settings.sound ? 'ON' : 'OFF'}`, run: () => this.toggle('sound') },
-      { label: () => `MUSIC: ${settings.music ? 'ON' : 'OFF'}`, run: () => this.toggle('music') },
+      { label: () => 'SOUND', status: () => settings.sound, run: () => this.toggle('sound') },
+      { label: () => 'MUSIC', status: () => settings.music, run: () => this.toggle('music') },
       {
-        label: () => `SCREEN SHAKE: ${settings.screenShake ? 'ON' : 'OFF'}`,
+        label: () => 'SCREEN SHAKE',
+        status: () => settings.screenShake,
         run: () => this.toggle('screenShake'),
       },
-      { label: () => 'FULLSCREEN', run: () => this.scale.toggleFullscreen() },
-      { label: () => `MELEE: ${settings.melee ? 'ON' : 'OFF'}`, run: () => this.toggle('melee') },
+      {
+        label: () => 'FULLSCREEN',
+        status: () => this.scale.isFullscreen,
+        run: () => this.scale.toggleFullscreen(),
+      },
+      { label: () => 'MELEE', status: () => settings.melee, run: () => this.toggle('melee') },
       { label: () => 'BACK', run: () => this.openMainMenu() },
     ];
   }
 
   private buildMenu(): void {
-    this.cursor = this.add.image(this.menuX - 6, this.menuBaseY, 'font_>');
-    this.cursor.setOrigin(0, 0);
     this.items = this.mainItems();
     this.renderItems();
   }
@@ -191,6 +191,8 @@ export class MainMenuScene extends Phaser.Scene {
     this.menuMode = 'settings';
     this.selection = 0;
     this.items = this.settingsItems();
+    this.footerTexts.forEach((t) => t.setVisible(false));
+    this.pressEnter?.setVisible(false);
     this.renderItems();
   }
 
@@ -198,6 +200,8 @@ export class MainMenuScene extends Phaser.Scene {
     this.menuMode = 'main';
     this.selection = 2;
     this.items = this.mainItems();
+    this.footerTexts.forEach((t) => t.setVisible(true));
+    this.pressEnter?.setVisible(true);
     this.renderItems();
   }
 
@@ -206,16 +210,18 @@ export class MainMenuScene extends Phaser.Scene {
     const km2 = KEYMAP[1];
     const move1 = km1.up + km1.left + km1.down + km1.right;
     const move2 = km2.up + km2.left + km2.down + km2.right;
-    createPixelText(this, GAME_WIDTH / 2, 150, `P1: ${move1} ${km1.melee}/${km1.weapon}`, {
-      scale: 1,
-      originX: 0.5,
-      color: COLOR_WHITE,
-    });
-    createPixelText(this, GAME_WIDTH / 2, 161, `P2: ${move2} ${km2.melee}/${km2.weapon}`, {
-      scale: 1,
-      originX: 0.5,
-      color: COLOR_WHITE,
-    });
+    this.footerTexts = [
+      createPixelText(this, GAME_WIDTH / 2, 150, `P1: ${move1} ${km1.melee}/${km1.weapon}`, {
+        scale: 1,
+        originX: 0.5,
+        color: COLOR_WHITE,
+      }),
+      createPixelText(this, GAME_WIDTH / 2, 161, `P2: ${move2} ${km2.melee}/${km2.weapon}`, {
+        scale: 1,
+        originX: 0.5,
+        color: COLOR_WHITE,
+      }),
+    ];
     this.renderCoin();
   }
 
@@ -247,16 +253,46 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private renderItems(): void {
-    this.itemTexts.forEach((t) => t.destroy());
-    this.itemTexts = this.items.map((item, i) => {
-      const t = createPixelText(this, this.menuX, this.menuBaseY + i * this.menuStep, item.label(), {
-        scale: 1,
-        color: COLOR_WHITE,
-      });
-      if (i === this.selection) this.tintText(t, COLOR_GOLD);
-      return t;
+    this.rowObjects.forEach((o) => o.destroy());
+    this.rowObjects = [];
+    const step = this.menuMode === 'settings' ? 14 : 11;
+    const baseY = this.menuMode === 'settings' ? 84 : 88;
+    const COLOR_BOX_ON = 0x28d84a;
+    const COLOR_BOX_ON_EDGE = 0x1a5c1c;
+    const COLOR_BOX_OFF = 0xf84838;
+    const COLOR_BOX_OFF_EDGE = 0x8c1c14;
+
+    this.items.forEach((item, i) => {
+      const y = baseY + i * step;
+      const selected = i === this.selection;
+      const label = item.label();
+      const labelW = label.length * 6 - 1;
+      const on = item.status ? item.status() : null;
+      const boxW = on === null ? 0 : on ? 20 : 26;
+      const rowW = boxW > 0 ? 106 : labelW;
+
+      if (selected) {
+        const hl = this.add
+          .rectangle(this.menuX - 3, y - 1, rowW + 7, 10, COLOR_GOLD)
+          .setOrigin(0, 0);
+        this.rowObjects.push(hl);
+      }
+      const t = createPixelText(this, this.menuX, y, label, { scale: 1, color: COLOR_WHITE });
+      this.rowObjects.push(t);
+
+      if (on !== null) {
+        const colRight = this.menuX + 104;
+        const bx = colRight - boxW;
+        const box = this.add.rectangle(bx + boxW / 2, y + 4, boxW, 10, on ? COLOR_BOX_ON : COLOR_BOX_OFF);
+        box.setStrokeStyle(1, on ? COLOR_BOX_ON_EDGE : COLOR_BOX_OFF_EDGE);
+        this.rowObjects.push(box);
+        const bt = createPixelText(this, bx + (boxW - (on ? 11 : 17)) / 2, y + 1, on ? 'ON' : 'OFF', {
+          scale: 1,
+          color: 0xffffff,
+        });
+        this.rowObjects.push(bt);
+      }
     });
-    this.cursor.setPosition(this.menuX - 6, this.menuBaseY + this.selection * this.menuStep + 1);
   }
 
   private openOnlineMenu(): void {
@@ -292,13 +328,6 @@ export class MainMenuScene extends Phaser.Scene {
     }
     this.showCredits = !this.showCredits;
     this.renderCoin();
-  }
-
-  private tintText(c: Phaser.GameObjects.Container | null, color: number): void {
-    if (!c) return;
-    for (const child of c.list) {
-      if (child instanceof Phaser.GameObjects.Image) child.setTint(color);
-    }
   }
 
   private cleanup(): void {
