@@ -251,8 +251,8 @@ export class Hud {
     const scale = text.length <= 6 ? 4 : 3;
     const col = color ?? COLOR_GOLD;
     const cy = GAME_HEIGHT / 2 - (7 * scale) / 2;
-    const shadow = createPixelText(this.scene, scale, scale, text, { scale, color: COLOR_DARK, forceTint: true });
-    const main = createPixelText(this.scene, 0, 0, text, { scale, color: col });
+    const shadow = createPixelText(this.scene, scale, scale, text, { scale, originX: 0.5, color: COLOR_DARK, forceTint: true });
+    const main = createPixelText(this.scene, 0, 0, text, { scale, originX: 0.5, color: col });
     const c = this.scene.add.container(GAME_WIDTH / 2, cy - 8);
     c.add([shadow, main]);
     c.setDepth(OVERLAY_DEPTH);
