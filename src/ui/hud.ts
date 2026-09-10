@@ -172,7 +172,7 @@ export class Hud {
       .setDisplaySize(44, 22)
       .setDepth(HUD_DEPTH);
     // TIME-Box: gezeichneter schwarzer Rahmen, transparenter Innenraum
-    const boxW = 34, boxH = 22, boxX = GAME_WIDTH / 2 - boxW / 2, boxY = 26;
+    const boxW = 34, boxH = 26, boxX = GAME_WIDTH / 2 - boxW / 2, boxY = 26;
     scene.add
       .rectangle(boxX + boxW / 2, boxY + boxH / 2, boxW, boxH)
       .setStrokeStyle(1, FRAME_BLACK)
@@ -251,7 +251,7 @@ export class Hud {
     const scale = text.length <= 6 ? 4 : 3;
     const col = color ?? COLOR_GOLD;
     const cy = GAME_HEIGHT / 2 - (7 * scale) / 2;
-    const shadow = createPixelText(this.scene, scale, scale, text, { scale, color: COLOR_DARK });
+    const shadow = createPixelText(this.scene, scale, scale, text, { scale, color: COLOR_DARK, forceTint: true });
     const main = createPixelText(this.scene, 0, 0, text, { scale, color: col });
     const c = this.scene.add.container(GAME_WIDTH / 2, cy - 8);
     c.add([shadow, main]);
@@ -277,7 +277,7 @@ export class Hud {
     this.resultContainer?.destroy();
     this.resultContainer = null;
     const label = winnerIdx === -1 ? 'DRAW!' : `PLAYER ${winnerIdx + 1} WINS!`;
-    const shadow = createPixelText(this.scene, 2, 2, label, { scale: 2, originX: 0.5, color: COLOR_DARK });
+    const shadow = createPixelText(this.scene, 2, 2, label, { scale: 2, originX: 0.5, color: COLOR_DARK, forceTint: true });
     const win = createPixelText(this.scene, 0, 0, label, { scale: 2, originX: 0.5, color: COLOR_GOLD });
     const rematch = createPixelText(this.scene, 0, 18, 'PRESS ENTER FOR REMATCH', {
       scale: 1,

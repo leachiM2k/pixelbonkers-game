@@ -207,6 +207,8 @@ export interface PixelTextOptions {
   /** 0 = links, 0.5 = zentriert, 1 = rechts */
   originX?: number;
   letterSpacing?: number;
+  /** Tint auch auf Charset-Glyphen anwenden (z.B. fuer Schattenkopien). */
+  forceTint?: boolean;
 }
 
 /**
@@ -246,7 +248,7 @@ export function createPixelText(
         const img = scene.add.image(cursor, 0, key);
         img.setOrigin(0, 0);
         img.setScale(scale * (slicedChars.has(ch) ? FONT_DISPLAY_SCALE : 1));
-        if (!slicedChars.has(ch)) img.setTint(color); // Charset-Glyphen behalten ihre native Farbe
+        if (!slicedChars.has(ch) || opts.forceTint) img.setTint(color);
         container.add(img);
       } else {
         console.warn(`[pixelText] fehlende Glyphen-Textur: ${key}`);
