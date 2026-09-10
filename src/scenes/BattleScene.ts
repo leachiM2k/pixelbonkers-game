@@ -11,7 +11,12 @@ import { CombatSystem } from '../systems/combat';
 import { WeaponSystem } from '../systems/weapons';
 import { Hud } from '../ui/hud';
 import { PauseMenu } from '../ui/PauseMenu';
-import { NetBattleConfig, NetSession } from '../net/contract';
+import { NetBattleConfig, NetSession, NetStatus } from '../net/contract';
+import { NetSession as NetSessionImpl } from '../net/session';
+import { encodeSnapshot, NetAnim, NetSnapshot } from '../net/snapshot';
+import { GuestView } from '../net/guestView';
+import { createPixelText } from '../ui/pixelText';
+import { PLAYER_MAX_HP } from '../entities/Player';
 
 const GROUND_TOP = 188;
 const ROUND_MS = 60000;
@@ -49,6 +54,15 @@ export class BattleScene extends Phaser.Scene {
   private netCfg: NetBattleConfig = { mode: 'local' };
   private netSession: NetSession | null = null;
   private remoteInput: PlayerInput | null = null;
+  private guestView: GuestView | null = null;
+  private netKeepSession = false;
+  private netWired = false;
+  private netCenterText = '';
+  private netWinnerIdx: 0 | 1 | -1 | null = null;
+  private netSeq = 0;
+  private netLastSendAt = 0;
+  private netRecvSnap = 0;
+  private netRecvInput = 0;
 
   constructor() {
     super('BattleScene');
@@ -56,15 +70,47 @@ export class BattleScene extends Phaser.Scene {
 
   init(data: Partial<NetBattleConfig>): void {
     this.netCfg = { mode: data?.mode ?? 'local', roomCode: data?.roomCode };
-    this.netSession = null;
-    this.remoteInput = null;
+    if (!this.netKeepSession) {
+      this.netSession = (data as { session?: NetSession } | undefined)?.session ?? null;
+      this.netWired = false;
+      this.remoteInput = null;
+    }
   }
 
   attachNetSession(session: NetSession): void {
+    if (this.netWired && this.netSession === session) return;
     this.netSession = session;
+    this.netWired = true;
     session.onInput((inp) => {
-      this.remoteInput = inp;
+      this.netRecvInput++;
+      if (!this.remoteInput) {
+        this.remoteInput = { ...inp };
+        return;
+      }
+      const prev = this.remoteInput;
+      this.remoteInput = {
+        ...inp,
+        meleePressed: prev.meleePressed || inp.meleePressed,
+        weaponPressed: prev.weaponPressed || inp.weaponPressed,
+        specialPressed: prev.specialPressed || inp.specialPressed,
+      };
     });
+    session.onSnapshot((snap) => {
+      this.netRecvSnap++;
+      if (this.netCfg.mode === 'guest') this.guestView?.receive(snap);
+    });
+    session.onStatus((s) => this.onNetStatus(s));
+  }
+
+  private onNetStatus(s: NetStatus): void {
+    const dbg = (window as unknown as { __PB_NET?: Record<string, unknown> }).__PB_NET;
+    if (dbg) {
+      dbg.state = s.state;
+      dbg.roomCode = s.roomCode;
+    }
+    if ((s.state === 'error' || s.state === 'closed') && (this.phase === 'fight' || this.phase === 'countdown')) {
+      this.hud.showCenterText('CONNECTION LOST', 0xe04848);
+    }
   }
 
   private getInputFor(idx: 0 | 1): PlayerInput {
@@ -76,6 +122,12 @@ export class BattleScene extends Phaser.Scene {
   create(): void {
     this.phase = 'countdown';
     this.paused = false;
+    this.netKeepSession = false;
+    this.netCenterText = '';
+    this.netWinnerIdx = null;
+    this.guestView = null;
+    this.netRecvSnap = 0;
+    this.netRecvInput = 0;
     this.timeLeft = ROUND_MS;
     this.lastTimerShown = 60;
     this.physics.world.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -104,13 +156,13 @@ export class BattleScene extends Phaser.Scene {
         this.pauseMenu.close();
         this.paused = false;
         this.music.stop();
-        this.scene.restart();
+        this.restartRound();
       },
       mainMenu: () => {
         this.pauseMenu.close();
         this.paused = false;
         this.music.stop();
-        this.scene.start('MainMenuScene');
+        this.leaveToMenu();
       },
     });
     this.debugG = this.add.graphics().setDepth(950).setVisible(false);
@@ -129,7 +181,10 @@ export class BattleScene extends Phaser.Scene {
       kb.addCapture('F10');
       kb.on('keydown-ESC', () => this.onEsc());
       kb.on('keydown-ENTER', () => {
-        if (this.phase === 'result' && !this.paused) this.scene.restart();
+        if (this.phase === 'result' && !this.paused) {
+          if (this.netCfg.mode === 'guest') return;
+          this.restartRound();
+        }
       });
       kb.on('keydown-F10', () => this.toggleDebug());
     }
@@ -138,18 +193,37 @@ export class BattleScene extends Phaser.Scene {
     this.events.once('shutdown', () => {
       this.events.off(EV.PLAYER_KO, koHandler);
       this.music.stop();
-      this.netSession?.close();
-      this.netSession = null;
+      if (!this.netKeepSession) {
+        this.netSession?.close();
+        this.netSession = null;
+      }
     });
-    this.startCountdown();
+    this.setupNet();
+    if (this.netCfg.mode === 'guest') {
+      this.hud.showCenterText('WAITING FOR HOST...', 0xf2f0e5);
+      const hint = createPixelText(this, GAME_WIDTH / 2, GAME_HEIGHT - 8, 'GUEST: ESC = LEAVE', {
+        scale: 1,
+        originX: 0.5,
+        color: 0xf2f0e5,
+      });
+      hint.setDepth(50).setAlpha(0.55);
+    } else {
+      this.startCountdown();
+    }
   }
 
   update(_time: number, delta: number): void {
     this.inputSystem.update();
+    if (this.netCfg.mode === 'host') {
+      this.netSendSnapshot();
+      this.netDebugUpdate();
+    }
     if (this.paused) return;
     if (this.netCfg.mode === 'guest') {
+      this.netSession?.sendInput(this.guestLocalInput());
       this.fx.update(delta);
       this.netTick(delta);
+      this.netDebugUpdate();
       if (this.debugEnabled) this.drawDebug();
       return;
     }
@@ -176,11 +250,16 @@ export class BattleScene extends Phaser.Scene {
       for (const p of this.players) if (p.isDead) p.update(EMPTY_INPUT);
       this.fx.update(delta);
     }
+    if (this.netCfg.mode === 'host' && this.remoteInput) {
+      this.remoteInput.meleePressed = false;
+      this.remoteInput.weaponPressed = false;
+      this.remoteInput.specialPressed = false;
+    }
     if (this.debugEnabled) this.drawDebug();
   }
 
   protected netTick(_delta: number): void {
-    // NET-CORE: Gast uebernimmt Snapshots des Hosts statt lokaler Simulation
+    this.guestView?.update();
   }
 
   private buildArena(): void {
@@ -373,6 +452,7 @@ export class BattleScene extends Phaser.Scene {
 
   private finishRound(winnerIdx: 0 | 1 | -1): void {
     this.phase = 'result';
+    this.netWinnerIdx = winnerIdx;
     this.music.stop();
     this.clearCenterText();
     this.hud.roundResult(winnerIdx);
@@ -393,16 +473,159 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private onEsc(): void {
+    if (this.netCfg.mode === 'guest') {
+      this.music.stop();
+      this.leaveToMenu();
+      return;
+    }
     if (this.paused) {
       this.resumeGame();
       return;
     }
     if (this.phase === 'result') {
       this.music.stop();
-      this.scene.start('MainMenuScene');
+      this.leaveToMenu();
       return;
     }
     if (this.phase === 'fight') this.pauseGame();
+  }
+
+  private leaveToMenu(): void {
+    this.netKeepSession = false;
+    this.netSession?.close();
+    this.netSession = null;
+    this.scene.start('MainMenuScene');
+  }
+
+  private restartRound(): void {
+    if (this.netCfg.mode === 'host') this.netKeepSession = true;
+    this.scene.restart({ mode: this.netCfg.mode });
+  }
+
+  private setupNet(): void {
+    if (this.netCfg.mode === 'guest') {
+      this.guestView = new GuestView(this, this.players, this.hud, this.fx, this.audioS, this.music);
+      for (const p of this.players) {
+        p.setAcceleration(0, 0);
+        p.arcadeBody.moves = false;
+        p.arcadeBody.enable = false;
+      }
+    }
+    if (this.netCfg.mode !== 'local' && this.netSession && !this.netWired) {
+      this.attachNetSession(this.netSession);
+    }
+    const nettest = typeof window !== 'undefined' && window.location.search.includes('nettest=');
+    if (!nettest) return;
+    (window as unknown as { __PB_NET: Record<string, unknown> }).__PB_NET = {
+      role: this.netCfg.mode,
+      state: 'idle',
+      roomCode: undefined,
+      sent: 0,
+      recv: this.netRecvSnap,
+      recvInput: 0,
+      sentInput: 0,
+      phase: this.phase,
+      paused: false,
+      p1: { x: 0, y: 0 },
+      p2: { x: 0, y: 0 },
+      hp: [PLAYER_MAX_HP, PLAYER_MAX_HP],
+    };
+    if (this.netCfg.mode !== 'local' && !this.netSession) {
+      this.attachNetSession(new NetSessionImpl(this.netCfg.mode, this.netCfg.roomCode));
+    }
+  }
+
+  private netSendSnapshot(): void {
+    if (!this.netSession || this.netCfg.mode !== 'host') return;
+    const now = this.time.now;
+    if (now - this.netLastSendAt < 45) return;
+    this.netLastSendAt = now;
+    this.netSeq = (this.netSeq + 1) & 0xff;
+    const snap: NetSnapshot = {
+      seq: this.netSeq,
+      players: [
+        this.netPlayerState(0),
+        this.netPlayerState(1),
+      ],
+      weapons: this.weapons.groundWeapons.map((w) => ({ id: w.weaponId, x: w.x, y: w.y, ageMs: w.age })),
+      projectiles: this.weapons.activeProjectiles.map((pr) => ({
+        id: pr.def.id,
+        x: pr.x,
+        y: pr.y,
+        angle: pr.angle,
+      })),
+      traps: this.weapons.activeTraps.map((t) => ({ x: t.x, y: t.y, angle: t.angle })),
+      timeLeftMs: Math.max(0, this.timeLeft),
+      phase: this.phase,
+      paused: this.paused,
+      winner: this.phase === 'result' ? this.netWinnerIdx : null,
+      center: this.netCenterText,
+    };
+    this.netSession.sendSnapshot(encodeSnapshot(snap));
+  }
+
+  private netPlayerState(idx: 0 | 1): NetSnapshot['players'][0] {
+    const p = this.players[idx];
+    const b = p.arcadeBody;
+    return {
+      x: p.x,
+      y: p.y,
+      vx: b.velocity.x,
+      vy: b.velocity.y,
+      facing: p.facing,
+      hp: p.hp,
+      anim: this.netAnimOf(p),
+      heldWeapon: p.heldWeapon,
+      dead: p.isDead,
+    };
+  }
+
+  private netAnimOf(p: Player): NetAnim {
+    if (p.isDead) return 'ko';
+    const keys = `${p.anims.currentAnim?.key ?? ''} ${p.texture.key}`;
+    if (keys.includes('attack')) return 'attack';
+    if (keys.includes('throw')) return 'throw';
+    if (keys.includes('hit')) return 'hit';
+    if (keys.includes('victory')) return 'victory';
+    if (keys.includes('duck')) return 'duck';
+    if (keys.includes('jump')) return 'jump';
+    if (keys.includes('fall')) return 'fall';
+    if (keys.includes('walk') || keys.includes('run')) return 'walk';
+    return 'idle';
+  }
+
+  private guestLocalInput(): PlayerInput {
+    const a = this.inputSystem.get(0);
+    const b = this.inputSystem.get(1);
+    return {
+      left: a.left || b.left,
+      right: a.right || b.right,
+      up: a.up || b.up,
+      down: a.down || b.down,
+      melee: a.melee || b.melee,
+      weapon: a.weapon || b.weapon,
+      special: a.special || b.special,
+      meleePressed: a.meleePressed || b.meleePressed,
+      weaponPressed: a.weaponPressed || b.weaponPressed,
+      specialPressed: a.specialPressed || b.specialPressed,
+    };
+  }
+
+  private netDebugUpdate(): void {
+    const dbg = (window as unknown as { __PB_NET?: Record<string, unknown> }).__PB_NET;
+    if (!dbg) return;
+    const [p1, p2] = this.players;
+    const sess = this.netSession as unknown as { sentSnapshots?: number; sentInputs?: number } | null;
+    dbg.phase = this.guestView?.currentPhase ?? this.phase;
+    dbg.paused = (this.guestView?.currentPaused ?? false) || this.paused;
+    dbg.p1 = { x: Math.round(p1.x), y: Math.round(p1.y) };
+    dbg.p2 = { x: Math.round(p2.x), y: Math.round(p2.y) };
+    dbg.hp = [p1.hp, p2.hp];
+    dbg.sent = sess?.sentSnapshots ?? 0;
+    dbg.sentInput = sess?.sentInputs ?? 0;
+    dbg.recv = this.netRecvSnap;
+    dbg.recvInput = this.netRecvInput;
+    dbg.fps = Math.round(this.game.loop.actualFps);
   }
 
   private pauseGame(): void {
@@ -424,10 +647,12 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private setCenterText(text: string, color = 0xf8d848): void {
+    this.netCenterText = text;
     this.hud.showCenterText(text, color);
   }
 
   private clearCenterText(): void {
+    this.netCenterText = '';
     this.hud.clearCenterText();
   }
 

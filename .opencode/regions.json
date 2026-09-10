@@ -1,5 +1,5 @@
 {
-  "_comment": "Regionen in sprite.png (Original-Koordinaten, inklusive Grenzen [x1,y1,x2,y2]). Basis: deterministische Component-Analyse (alpha>=64, dilate=1) + Vision-Labeling.",
+  "_comment": "Regionen in sprite.png (Original-Koordinaten, inklusive Grenzen [x1,y1,x2,y2]). Basis: deterministische Component-Analyse (alpha>=64, dilate=1) + Vision-Labeling. Arena-Band verfeinert (GFX v2): Objekte y~575-686, Labels y~688-705; arena_bird/house/cloud/leaf/path sind NICHT im Sheet (Matrix-Fallback). Attack-Swish ist separater Sprite (maskiert).",
   "boys": [
     {
       "key": "boy1_idle_0",
@@ -402,6 +402,251 @@
         723
       ],
       "factor": 3
+    }
+  ],
+  "arena": [
+    {
+      "key": "arena_tree",
+      "bbox": [
+        620,
+        581,
+        703,
+        682
+      ],
+      "crop": [
+        612,
+        573,
+        708,
+        686
+      ],
+      "size": [
+        36,
+        48
+      ]
+    },
+    {
+      "key": "arena_bush",
+      "bbox": [
+        712,
+        622,
+        781,
+        683
+      ],
+      "crop": [
+        708,
+        617,
+        786,
+        688
+      ],
+      "size": [
+        13,
+        8
+      ]
+    },
+    {
+      "key": "arena_bench",
+      "bbox": [
+        794,
+        626,
+        889,
+        683
+      ],
+      "crop": [
+        790,
+        620,
+        894,
+        688
+      ],
+      "size": [
+        26,
+        12
+      ]
+    },
+    {
+      "key": "arena_trashcan",
+      "bbox": [
+        900,
+        612,
+        944,
+        684
+      ],
+      "crop": [
+        896,
+        607,
+        949,
+        688
+      ],
+      "size": [
+        12,
+        14
+      ]
+    },
+    {
+      "key": "arena_lamp",
+      "bbox": [
+        957,
+        577,
+        980,
+        683
+      ],
+      "crop": [
+        952,
+        572,
+        985,
+        688
+      ],
+      "size": [
+        14,
+        38
+      ]
+    },
+    {
+      "key": "arena_flower_0",
+      "bbox": [
+        996,
+        636,
+        1022,
+        681
+      ],
+      "crop": [
+        995,
+        632,
+        1027,
+        668
+      ],
+      "size": [
+        5,
+        6
+      ],
+      "note": "orange-rote Hauptbl\u00fcte links"
+    },
+    {
+      "key": "arena_flower_1",
+      "bbox": [
+        1033,
+        638,
+        1047,
+        662
+      ],
+      "crop": [
+        1029,
+        630,
+        1047,
+        664
+      ],
+      "size": [
+        5,
+        6
+      ],
+      "note": "rosa/lavendel Bl\u00fcte, Blumen-Cluster per Alpha-Profil getrennt"
+    },
+    {
+      "key": "arena_grass_0",
+      "bbox": [
+        1074,
+        655,
+        1107,
+        681
+      ],
+      "crop": [
+        1072,
+        652,
+        1086,
+        684
+      ],
+      "size": [
+        5,
+        4
+      ],
+      "note": "1 Grasb\u00fcschel, 3 Sub-Crops fuer Varianten 0/1/2"
+    },
+    {
+      "key": "arena_grass_1",
+      "bbox": [
+        1074,
+        655,
+        1107,
+        681
+      ],
+      "crop": [
+        1082,
+        652,
+        1097,
+        684
+      ],
+      "size": [
+        5,
+        4
+      ]
+    },
+    {
+      "key": "arena_grass_2",
+      "bbox": [
+        1074,
+        655,
+        1107,
+        681
+      ],
+      "crop": [
+        1092,
+        652,
+        1109,
+        684
+      ],
+      "size": [
+        5,
+        4
+      ]
+    },
+    {
+      "key": "arena_platform_unused",
+      "bbox": [
+        1118,
+        624,
+        1192,
+        681
+      ],
+      "note": "Erd-Plattform, kein Spiel-Key"
+    },
+    {
+      "key": "arena_water_unused",
+      "bbox": [
+        1205,
+        647,
+        1295,
+        682
+      ],
+      "note": "Wasser-Tile, kein Spiel-Key"
+    },
+    {
+      "key": "arena_coin_unused",
+      "bbox": [
+        1356,
+        604,
+        1398,
+        650
+      ],
+      "note": "M\u00fcnze, kein Spiel-Key"
+    },
+    {
+      "key": "arena_mushroom_unused",
+      "bbox": [
+        1433,
+        603,
+        1484,
+        653
+      ],
+      "note": "Pilz, kein Spiel-Key"
+    },
+    {
+      "key": "arena_mushroom2_unused",
+      "bbox": [
+        1212,
+        602,
+        1252,
+        628
+      ],
+      "note": "kleiner gr\u00fcner Pilz ueber Wasser"
     }
   ]
 }

@@ -27,8 +27,8 @@ export class BootScene extends Phaser.Scene {
         this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);
       }
     }
-    // Matrix-Fallbacks fuer alle Keys ohne PNG (registerPixelSprite ueberspringt existierende)
-    registerPixelSprites(this, allSprites());
+    // Matrix-Fallbacks nur fuer Keys OHNE PNG (keine Doppel-Registrierungs-Warnungen)
+    registerPixelSprites(this, allSprites().filter((s) => !pngLoadedKeys.has(s.key)));
     registerFontTextures(this);
     buildAnimations(this);
     // Dev-Vorschau aller Sprites via index.html?sprites=1

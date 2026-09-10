@@ -5,6 +5,10 @@ import { AudioSystem } from '../systems/audio';
 import { KEYMAP } from '../systems/input';
 import { createPixelText } from '../ui/pixelText';
 import { ControlsScreen } from '../ui/ControlsScreen';
+import { OnlineMenu, NetSessionFactoryLike } from '../ui/OnlineMenu';
+import { createNetSessionFactory } from '../ui/netFactory';
+import { isPngKey } from '../sprites/manifest';
+import type { NetBattleConfig, NetSession } from '../net/contract';
 
 // META-Ownership: MainMenuScene. Arcade-Titelbildschirm laut Spezifikation 16/36.
 
@@ -32,6 +36,12 @@ export class MainMenuScene extends Phaser.Scene {
   private coinTween: Phaser.Tweens.Tween | null = null;
   private showCredits = false;
   private subtitle: Phaser.GameObjects.Container | null = null;
+  private onlineMenu: OnlineMenu | null = null;
+  private netFactory: NetSessionFactoryLike = createNetSessionFactory();
+
+  private readonly startNetBattle = (cfg: NetBattleConfig, session: NetSession): void => {
+    this.scene.start('BattleScene', { ...cfg, session });
+  };
 
   private readonly menuX = 150;
   private readonly menuBaseY = 76;
@@ -42,10 +52,25 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   create(): void {
+    if (typeof window !== 'undefined' && window.location.search.includes('nettest=host')) {
+      this.scene.start('BattleScene', { mode: 'host' });
+      return;
+    }
+    if (typeof window !== 'undefined' && window.location.search.includes('nettest=guest')) {
+      this.scene.start('BattleScene', {
+        mode: 'guest',
+        roomCode: window.localStorage.getItem('pb-net-room') ?? '',
+      });
+      return;
+    }
     this.selection = 0;
     this.showCredits = false;
     this.audio = new AudioSystem(this);
     this.controls = new ControlsScreen();
+    this.onlineMenu = new OnlineMenu({
+      host: (cb) => this.netFactory.host(cb),
+      join: (code, cb) => this.netFactory.join(code, cb),
+    });
     this.itemTexts = [];
     this.subtitle = null;
     this.coinText = null;
@@ -93,7 +118,7 @@ export class MainMenuScene extends Phaser.Scene {
   private spawnIdleBoy(x: number, frameKey: string, animKey: string, flip: boolean): void {
     const boy = this.add.sprite(x, GAME_HEIGHT - 4, frameKey);
     boy.setOrigin(0.5, 1);
-    boy.setScale(2);
+    boy.setScale(isPngKey(frameKey) ? 1 : 2);
     boy.setFlipX(flip);
     if (this.anims.exists(animKey)) boy.play(animKey);
   }
@@ -134,6 +159,7 @@ export class MainMenuScene extends Phaser.Scene {
   private buildMenu(): void {
     this.items = [
       { label: () => 'VS LOCAL', run: () => this.scene.start('BattleScene') },
+      { label: () => 'ONLINE', run: () => this.openOnlineMenu() },
       { label: () => `SOUND: ${settings.sound ? 'ON' : 'OFF'}`, run: () => this.toggle('sound') },
       { label: () => `MUSIC: ${settings.music ? 'ON' : 'OFF'}`, run: () => this.toggle('music') },
       {
@@ -206,28 +232,32 @@ export class MainMenuScene extends Phaser.Scene {
     this.cursor.setPosition(this.menuX - 6, this.menuBaseY + this.selection * this.menuStep + 1);
   }
 
+  private openOnlineMenu(): void {
+    this.onlineMenu?.create(this, this.startNetBattle);
+  }
+
   private onUp(): void {
-    if (this.controls.isOpen) return;
+    if (this.controls.isOpen || this.onlineMenu?.isOpen) return;
     this.selection = (this.selection - 1 + this.items.length) % this.items.length;
     this.renderItems();
     this.audio.play('menuSelect');
   }
 
   private onDown(): void {
-    if (this.controls.isOpen) return;
+    if (this.controls.isOpen || this.onlineMenu?.isOpen) return;
     this.selection = (this.selection + 1) % this.items.length;
     this.renderItems();
     this.audio.play('menuSelect');
   }
 
   private onConfirm(): void {
-    if (this.controls.isOpen) return;
+    if (this.controls.isOpen || this.onlineMenu?.isOpen) return;
     this.audio.play('menuSelect');
     this.items[this.selection].run();
   }
 
   private onEscape(): void {
-    if (this.controls.isOpen) return;
+    if (this.controls.isOpen || this.onlineMenu?.isOpen) return;
     this.showCredits = !this.showCredits;
     this.renderCoin();
   }
@@ -250,5 +280,7 @@ export class MainMenuScene extends Phaser.Scene {
       kb.off('keydown-ESC', this.onEscape, this);
     }
     this.controls.destroy();
+    this.onlineMenu?.destroy();
+    this.onlineMenu = null;
   }
 }

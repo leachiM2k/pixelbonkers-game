@@ -109,6 +109,7 @@ ALLES über WebAudio synthetisiert, keine Dateien. Gummihuhn: besonders alberner
 - Depth-Konvention: Deko 3 · Spieler 10 · Boden-Waffen 11 · Projektile 12 · HUD 50 · Center-Text/Overlays 100+.
 - Pixel-Art: harte Kanten, dunkle Outlines (Palette 'k'), keine Verläufe, kein Anti-Aliasing.
 - PNG-Sprites (Sheet-Extraktion): volle RGBA-Treue, in finaler Anzeigegroesse gespeichert, LINEAR-Filter (setzt BootScene). Matrix-Fallbacks bleiben Scale 2. Font + pixelText bleiben Nearest.
+- Canvas-Upscaling: CSS-smooth (image-rendering: auto), NICHT pixelated — der Look orientiert sich am weichen Referenz-ingame.png.
 - Netzwerk: alle Konsumten nutzen NUR src/net/contract.ts-Typen. Host = P1 simuliert; Guest = P2, keine lokale Simulation (netTick-Pfad in BattleScene).
 - Keine Kommentare im Code, außer Export-Verträgen.
 - TS strict; `npm run typecheck` muss am Ende ohne Fehler durchlaufen.
