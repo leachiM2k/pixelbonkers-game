@@ -40,7 +40,9 @@ export class Projectile extends Phaser.Physics.Arcade.Image {
     platforms: Phaser.Physics.Arcade.StaticGroup,
     hooks: ProjectileHooks,
   ) {
-    super(scene, x, y, `wpn_${weaponId}`);
+    const projKey = `wpnp_${weaponId}`;
+    const key = scene.textures.exists(projKey) ? projKey : `wpn_${weaponId}`;
+    super(scene, x, y, key);
     this.def = WEAPONS[weaponId];
     this.ownerIdx = ownerIdx;
     this.owner = owner;
@@ -49,7 +51,7 @@ export class Projectile extends Phaser.Physics.Arcade.Image {
     scene.physics.add.existing(this);
     this.setScale(isPngKey(this.texture.key) ? weaponDisplayScale(this.height) : 2).setDepth(12);
     const body = this.arcadeBody;
-    const pin = WEAPON_BODY[this.texture.key];
+    const pin = WEAPON_BODY[`wpn_${weaponId}`];
     if (pin) body.setSize(pin.w, pin.h, true);
     body.setBounce(this.def.bounces ? 0.55 : 0.2);
     body.setGravityY((this.def.projectileGravity ?? GRAVITY) - GRAVITY);

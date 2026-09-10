@@ -3,7 +3,7 @@
 // WEAPON_DISPLAY_H: einheitliche Waffen-Anzeigehoehe (per-Textur-Skalierung, comic aber handlich).
 // WEAPON_BODY: Hitbox-Pinning der Waffen auf die vorherigen Pixelmaße (Gameplay unveraendert).
 export const SHEET_SCALE = 2 / 3;
-export const WEAPON_DISPLAY_H = 40;
+export const WEAPON_DISPLAY_H = 32;
 
 export function weaponDisplayScale(textureHeight: number): number {
   return WEAPON_DISPLAY_H / textureHeight;

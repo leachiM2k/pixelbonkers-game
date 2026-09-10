@@ -25,6 +25,8 @@ export const PNG_SPRITE_KEYS: string[] = [
   "boy2_walk_2", "boy2_walk_3", "hud_heart", "hud_heart_empty",
   "hud_portrait_1", "hud_portrait_2", "hud_vs", "wpn_banana",
   "wpn_fryingPan", "wpn_pillow", "wpn_plunger", "wpn_rubberBoot",
+  "wpnp_plunger", "wpnp_rubberChicken", "wpnp_banana", "wpnp_pillow",
+  "wpnp_toiletBrush", "wpnp_fryingPan", "wpnp_rubberDuck",
   "wpn_rubberChicken", "wpn_rubberDuck", "wpn_toiletBrush",
 ];
 
