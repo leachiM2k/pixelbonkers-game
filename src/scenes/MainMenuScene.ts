@@ -231,7 +231,7 @@ export class MainMenuScene extends Phaser.Scene {
       this,
       GAME_WIDTH - 4,
       GAME_HEIGHT - 9,
-      this.showCredits ? '(C) 2026 BONKWORKS - FREE PLAY' : 'INSERT COIN',
+      this.showCredits ? '(C) 2026 LEACHIM2K - FREE PLAY' : 'INSERT COIN',
       { scale: 1, originX: 1, color: COLOR_GOLD },
     );
     this.coinTween = this.tweens.add({
