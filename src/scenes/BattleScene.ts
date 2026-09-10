@@ -17,6 +17,8 @@ import { encodeSnapshot, NetAnim, NetSnapshot } from '../net/snapshot';
 import { GuestView } from '../net/guestView';
 import { createPixelText } from '../ui/pixelText';
 import { PLAYER_MAX_HP } from '../entities/Player';
+import { isPngKey } from '../sprites/manifest';
+import { SHEET_SCALE } from '../sprites/sheetScale';
 
 const GROUND_TOP = 188;
 const ROUND_MS = 60000;
@@ -330,7 +332,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private deco(x: number, y: number, key: string, depth = 3): void {
-    this.add.image(x, y, key).setOrigin(0.5, 1).setScale(2).setDepth(depth);
+    this.add.image(x, y, key).setOrigin(0.5, 1).setScale(isPngKey(key) ? SHEET_SCALE : 2).setDepth(depth);
   }
 
   private addCloud(x: number, y: number, key: string, duration: number): void {

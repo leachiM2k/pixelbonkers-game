@@ -5,6 +5,7 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, GRAVITY, WEAPONS, WeaponDefinition, WeaponId } from '../types';
 import { isPngKey } from '../sprites/manifest';
+import { SHEET_SCALE, WEAPON_BODY } from '../sprites/sheetScale';
 
 export interface ProjectileHooks {
   onBounce: (p: Projectile) => void;
@@ -46,8 +47,10 @@ export class Projectile extends Phaser.Physics.Arcade.Image {
     this.hooks = hooks;
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    this.setScale(isPngKey(this.texture.key) ? 1 : 2).setDepth(12);
+    this.setScale(isPngKey(this.texture.key) ? SHEET_SCALE : 2).setDepth(12);
     const body = this.arcadeBody;
+    const pin = WEAPON_BODY[this.texture.key];
+    if (pin) body.setSize(pin.w, pin.h, true);
     body.setBounce(this.def.bounces ? 0.55 : 0.2);
     body.setGravityY((this.def.projectileGravity ?? GRAVITY) - GRAVITY);
     this.collider = scene.physics.add.collider(this, platforms);

@@ -9,6 +9,7 @@ import Phaser from 'phaser';
 import { WeaponId, PLAYER1_SKIN, PLAYER2_SKIN } from '../types';
 import { PlayerInput } from '../systems/input';
 import { isPngKey } from '../sprites/manifest';
+import { SHEET_SCALE } from '../sprites/sheetScale';
 
 export const MOVE_SPEED = 120;
 export const DUCK_SPEED_FACTOR = 0.6;
@@ -55,7 +56,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setOrigin(0.5, 1);
-    this.setScale(isPngKey(this.texture.key) ? 1 : 2);
+    this.setScale(isPngKey(this.texture.key) ? SHEET_SCALE : 2);
     this.setCollideWorldBounds(true);
     this.setFlipX(this.facing === -1);
     this.applyBodyShape(PLAYER_BODY_H);

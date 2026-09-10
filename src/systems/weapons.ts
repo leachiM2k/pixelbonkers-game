@@ -8,6 +8,7 @@
 import Phaser from 'phaser';
 import { EV, GAME_WIDTH, WEAPON_IDS, WEAPONS, WeaponId } from '../types';
 import { isPngKey } from '../sprites/manifest';
+import { SHEET_SCALE } from '../sprites/sheetScale';
 import { Player, safePlayAnim } from '../entities/Player';
 import {
   Weapon,
@@ -125,7 +126,7 @@ export class WeaponSystem {
     this.removeWeaponAt(this.weapons.indexOf(w));
     this.heldImages[player.idx] = this.scene.add
       .image(player.x, player.y - 30, `wpn_${id}`)
-      .setScale(isPngKey(`wpn_${id}`) ? 1 : 2)
+      .setScale(isPngKey(`wpn_${id}`) ? SHEET_SCALE : 2)
       .setDepth(11);
     this.hidePrompt(player.idx);
   }
@@ -290,7 +291,7 @@ export class WeaponSystem {
           this.scene.events.emit(EV.WEAPON_PICKUP, pl.idx, pr.def.id);
           this.heldImages[pl.idx] = this.scene.add
             .image(pl.x, pl.y - 30, `wpn_${pr.def.id}`)
-            .setScale(isPngKey(`wpn_${pr.def.id}`) ? 1 : 2)
+            .setScale(isPngKey(`wpn_${pr.def.id}`) ? SHEET_SCALE : 2)
             .setDepth(11);
           this.removeProjectileAt(i);
           break;

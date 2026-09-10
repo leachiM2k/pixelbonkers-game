@@ -28,7 +28,7 @@ export class ControlsScreen {
     const km2 = KEYMAP[1];
     const rows: Array<[string, string, string]> = [
       ['MOVE', km1.up + km1.left + km1.down + km1.right, km2.up + km2.left + km2.down + km2.right],
-      ['ATTACK', km1.melee, km2.melee],
+      ['KICK', km1.melee, km2.melee],
       ['WEAPON', km1.weapon, km2.weapon],
       ['SPECIAL', km1.special, km2.special],
       ['PAUSE', 'ESC', 'ESC'],

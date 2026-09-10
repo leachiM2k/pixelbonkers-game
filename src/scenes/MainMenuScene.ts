@@ -8,6 +8,7 @@ import { ControlsScreen } from '../ui/ControlsScreen';
 import { OnlineMenu, NetSessionFactoryLike } from '../ui/OnlineMenu';
 import { createNetSessionFactory } from '../ui/netFactory';
 import { isPngKey } from '../sprites/manifest';
+import { SHEET_SCALE } from '../sprites/sheetScale';
 import type { NetBattleConfig, NetSession } from '../net/contract';
 
 // META-Ownership: MainMenuScene. Arcade-Titelbildschirm laut Spezifikation 16/36.
@@ -115,7 +116,7 @@ export class MainMenuScene extends Phaser.Scene {
   private spawnIdleBoy(x: number, frameKey: string, animKey: string, flip: boolean): void {
     const boy = this.add.sprite(x, GAME_HEIGHT - 4, frameKey);
     boy.setOrigin(0.5, 1);
-    boy.setScale(isPngKey(frameKey) ? 1 : 2);
+    boy.setScale(isPngKey(frameKey) ? SHEET_SCALE : 2);
     boy.setFlipX(flip);
     if (this.anims.exists(animKey)) boy.play(animKey);
   }
@@ -177,7 +178,7 @@ export class MainMenuScene extends Phaser.Scene {
         status: () => this.scale.isFullscreen,
         run: () => this.scale.toggleFullscreen(),
       },
-      { label: () => 'MELEE', status: () => settings.melee, run: () => this.toggle('melee') },
+      { label: () => 'KICK', status: () => settings.melee, run: () => this.toggle('melee') },
       { label: () => 'BACK', run: () => this.openMainMenu() },
     ];
   }
