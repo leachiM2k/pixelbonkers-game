@@ -11,9 +11,12 @@ Pipeline: Sprites als String-Matrizen → `registerPixelSprites` in BootScene �
 | ART | `src/sprites/*` (boy1, boy2, weapons, arena, hud, font, __preview, index) |
 | CORE | `src/systems/input.ts`, `src/entities/Player.ts`, `src/entities/Hitbox.ts` |
 | FX/AUDIO | `src/systems/fx.ts` (inkl. `fxSprites()`-Texturen), `src/systems/audio.ts`, `src/systems/music.ts` |
-| COMBAT | `src/scenes/BattleScene.ts`, `src/systems/combat.ts`, `src/systems/weapons.ts`, `src/entities/Weapon.ts`, `src/entities/Projectile.ts` |
+| COMBAT | `src/scenes/BattleScene.ts`, `src/systems/combat.ts`, `src/systems/weapons.ts`, `src/entities/Weapon.ts`, `src/entities/Projectile.ts`, `src/entities/Trap.ts` |
 | META | `src/scenes/MainMenuScene.ts`, `src/ui/hud.ts`, `src/ui/PauseMenu.ts`, `src/ui/ControlsScreen.ts` |
-| ORCHESTRATOR | `src/types.ts`, `src/art/*`, `src/game/*`, `src/ui/pixelText.ts`, `src/scenes/BootScene.ts`, `src/main.ts`, `package.json`, `tsconfig.json` |
+| GFX | `public/assets/sprites/*`, `src/sprites/manifest.ts`, `src/sprites/*.data.ts`, `src/sprites/boy*.ts`, `weapons.ts`, `arena.ts`, `hud.ts` (Extraktion v2) |
+| NET-CORE | `server/*`, `src/net/*` (ausser `contract.ts`), surgical Patches in `BattleScene.ts` (nur netTick/Guest-Pfad + attachNetSession) |
+| NET-UI | `src/scenes/MainMenuScene.ts` (ONLINE-Menü), eigene neue Dateien in `src/ui/` |
+| ORCHESTRATOR | `src/types.ts`, `src/art/*`, `src/game/*`, `src/ui/pixelText.ts`, `src/scenes/BootScene.ts`, `src/sprites/{font,index,__preview}.ts`, `src/net/contract.ts`, `src/main.ts`, `package.json`, `tsconfig.json`, `CONTRACTS.md` |
 
 Gemeinsame genutzte Dateien (nur ORCHESTRATOR ändert): `src/types.ts`, `src/art/palette.ts`, `src/art/pixelToTexture.ts`, `src/ui/pixelText.ts`, `src/game/settings.ts`.
 
@@ -105,6 +108,8 @@ ALLES über WebAudio synthetisiert, keine Dateien. Gummihuhn: besonders alberner
 
 - Depth-Konvention: Deko 3 · Spieler 10 · Boden-Waffen 11 · Projektile 12 · HUD 50 · Center-Text/Overlays 100+.
 - Pixel-Art: harte Kanten, dunkle Outlines (Palette 'k'), keine Verläufe, kein Anti-Aliasing.
+- PNG-Sprites (Sheet-Extraktion): volle RGBA-Treue, in finaler Anzeigegroesse gespeichert, LINEAR-Filter (setzt BootScene). Matrix-Fallbacks bleiben Scale 2. Font + pixelText bleiben Nearest.
+- Netzwerk: alle Konsumten nutzen NUR src/net/contract.ts-Typen. Host = P1 simuliert; Guest = P2, keine lokale Simulation (netTick-Pfad in BattleScene).
 - Keine Kommentare im Code, außer Export-Verträgen.
 - TS strict; `npm run typecheck` muss am Ende ohne Fehler durchlaufen.
 - Fehlende Assets: nie crashen, warnen + Placeholder (siehe pixelToTexture fail-safe).

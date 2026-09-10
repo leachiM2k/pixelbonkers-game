@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { registerPixelSprites } from '../art/pixelToTexture';
 import { allSprites, buildAnimations } from '../sprites';
+import { PNG_SPRITE_KEYS, pngLoadedKeys } from '../sprites/manifest';
 import { SpritePreviewScene } from '../sprites/__preview';
 import { registerFontTextures } from '../ui/pixelText';
 
@@ -9,8 +10,24 @@ export class BootScene extends Phaser.Scene {
     super('BootScene');
   }
 
+  preload(): void {
+    for (const key of PNG_SPRITE_KEYS) {
+      this.load.image(key, `assets/sprites/${key}.png`);
+    }
+    this.load.on('loaderror', (file: Phaser.Loader.File) => {
+      console.warn(`[boot] PNG fehlt, Matrix-Fallback aktiv: ${file.key}`);
+    });
+  }
+
   create(): void {
-    // Alle Sprites einmalig in Texturen backen (Performance: danach reine GPU-Sprites)
+    // PNG-Texturen: geladene Keys markieren + LINEAR-Filter (weiche Sheet-Optik)
+    for (const key of PNG_SPRITE_KEYS) {
+      if (this.textures.exists(key) && this.textures.get(key).source[0].image) {
+        pngLoadedKeys.add(key);
+        this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);
+      }
+    }
+    // Matrix-Fallbacks fuer alle Keys ohne PNG (registerPixelSprite ueberspringt existierende)
     registerPixelSprites(this, allSprites());
     registerFontTextures(this);
     buildAnimations(this);

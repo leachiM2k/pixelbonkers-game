@@ -11,6 +11,7 @@ import { CombatSystem } from '../systems/combat';
 import { WeaponSystem } from '../systems/weapons';
 import { Hud } from '../ui/hud';
 import { PauseMenu } from '../ui/PauseMenu';
+import { NetBattleConfig, NetSession } from '../net/contract';
 
 const GROUND_TOP = 188;
 const ROUND_MS = 60000;
@@ -45,9 +46,31 @@ export class BattleScene extends Phaser.Scene {
   private debugEnabled = false;
   private debugG!: Phaser.GameObjects.Graphics;
   private debugText!: Phaser.GameObjects.Text;
+  private netCfg: NetBattleConfig = { mode: 'local' };
+  private netSession: NetSession | null = null;
+  private remoteInput: PlayerInput | null = null;
 
   constructor() {
     super('BattleScene');
+  }
+
+  init(data: Partial<NetBattleConfig>): void {
+    this.netCfg = { mode: data?.mode ?? 'local', roomCode: data?.roomCode };
+    this.netSession = null;
+    this.remoteInput = null;
+  }
+
+  attachNetSession(session: NetSession): void {
+    this.netSession = session;
+    session.onInput((inp) => {
+      this.remoteInput = inp;
+    });
+  }
+
+  private getInputFor(idx: 0 | 1): PlayerInput {
+    if (this.netCfg.mode === 'host' && idx === 1) return this.remoteInput ?? EMPTY_INPUT;
+    if (this.netCfg.mode === 'guest') return EMPTY_INPUT;
+    return this.inputSystem.get(idx);
   }
 
   create(): void {
@@ -115,6 +138,8 @@ export class BattleScene extends Phaser.Scene {
     this.events.once('shutdown', () => {
       this.events.off(EV.PLAYER_KO, koHandler);
       this.music.stop();
+      this.netSession?.close();
+      this.netSession = null;
     });
     this.startCountdown();
   }
@@ -122,9 +147,15 @@ export class BattleScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     this.inputSystem.update();
     if (this.paused) return;
+    if (this.netCfg.mode === 'guest') {
+      this.fx.update(delta);
+      this.netTick(delta);
+      if (this.debugEnabled) this.drawDebug();
+      return;
+    }
     if (this.phase === 'fight') {
       for (const p of this.players) {
-        const inp = this.inputSystem.get(p.idx);
+        const inp = this.getInputFor(p.idx);
         if (this.combat.isBusy(p) || this.weapons.isBusy(p)) continue;
         p.update(inp);
         if (inp.meleePressed) this.combat.tryMelee(p);
@@ -146,6 +177,10 @@ export class BattleScene extends Phaser.Scene {
       this.fx.update(delta);
     }
     if (this.debugEnabled) this.drawDebug();
+  }
+
+  protected netTick(_delta: number): void {
+    // NET-CORE: Gast uebernimmt Snapshots des Hosts statt lokaler Simulation
   }
 
   private buildArena(): void {

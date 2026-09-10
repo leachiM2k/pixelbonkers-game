@@ -2,6 +2,7 @@
 // collider-Feld wird vom WeaponSystem gesetzt und vor destroy entfernt.
 import Phaser from 'phaser';
 import { GAME_HEIGHT, WeaponId } from '../types';
+import { isPngKey } from '../sprites/manifest';
 
 export const WEAPON_LIFETIME_MS = 12000;
 export const WEAPON_BLINK_MS = 2000;
@@ -20,7 +21,7 @@ export class Weapon extends Phaser.Physics.Arcade.Image {
     this.weaponId = weaponId;
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    this.setScale(2).setDepth(11);
+    this.setScale(isPngKey(this.texture.key) ? 1 : 2).setDepth(11);
     this.arcadeBody.setBounce(0.3);
     this.arcadeBody.setDragX(150);
   }
