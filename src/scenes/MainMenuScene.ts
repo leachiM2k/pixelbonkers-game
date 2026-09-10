@@ -125,6 +125,9 @@ export class MainMenuScene extends Phaser.Scene {
   private buildTitle(): void {
     // Kombi-Titel (Logo + Untertitel) als ein Asset (Fallback: PixelText-Titel)
     if (this.textures.exists('menu_title')) {
+      // Kamera-Zoom 2 sampelt 2x aus der Quelle: NEAREST haelt jeden Quellpixel
+      // als exaktes 2x2-Device-Pixel-Block (kein LINEAR-Weichzeichner).
+      this.textures.get('menu_title').setFilter(Phaser.Textures.FilterMode.NEAREST);
       const title = this.add.image(GAME_WIDTH / 2, 10, 'menu_title');
       title.setOrigin(0.5, 0);
     } else {
