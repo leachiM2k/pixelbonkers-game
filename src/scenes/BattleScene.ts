@@ -22,7 +22,6 @@ const GROUND_TOP = 188;
 const ROUND_MS = 60000;
 const COUNTDOWN_STEP_MS = 800;
 const PAL_GRASS = 0x48a838;
-const PAL_GRASS_DARK = 0x2f7024;
 const PAL_GRASS_LIGHT = 0x28d84a;
 
 type Phase = 'countdown' | 'fight' | 'ko' | 'result';
@@ -268,9 +267,7 @@ export class BattleScene extends Phaser.Scene {
       .setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
       .setDepth(0);
     this.platforms = this.physics.add.staticGroup();
-    this.addStaticRect(GAME_WIDTH / 2, GROUND_TOP + 14, GAME_WIDTH, 28, PAL_GRASS, 1);
-    this.add.rectangle(GAME_WIDTH / 2, GROUND_TOP + 23, GAME_WIDTH, 10, PAL_GRASS_DARK).setDepth(1);
-    this.add.rectangle(GAME_WIDTH / 2, GROUND_TOP + 1, GAME_WIDTH, 2, PAL_GRASS_LIGHT).setDepth(2);
+    this.addStaticRect(GAME_WIDTH / 2, GROUND_TOP + 14, GAME_WIDTH, 28, PAL_GRASS, 1, false);
     this.addPlatform(48, 150, 70);
     this.addPlatform(336, 150, 70);
     this.addPlatform(192, 170, 44);
@@ -306,8 +303,9 @@ export class BattleScene extends Phaser.Scene {
     h: number,
     color: number,
     depth: number,
+    visible = true,
   ): Phaser.GameObjects.Rectangle {
-    const r = this.add.rectangle(cx, cy, w, h, color).setDepth(depth);
+    const r = this.add.rectangle(cx, cy, w, h, color).setDepth(depth).setVisible(visible);
     this.physics.add.existing(r, true);
     this.platforms.add(r);
     return r;
