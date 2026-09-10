@@ -326,9 +326,16 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private addPlatform(cx: number, topY: number, w: number): void {
-    this.addStaticRect(cx, topY + 3, w, 6, PAL_WOOD, 4);
-    this.add.rectangle(cx, topY + 1, w, 2, PAL_WOOD_LIGHT).setDepth(5);
-    this.add.rectangle(cx, topY + 6.5, w, 1, PAL_WOOD_DARK).setDepth(5);
+    // Kollisions-Body (unsichtbar) + Plattform-Textur aus dem Asset
+    this.addStaticRect(cx, topY + 3, w, 6, 0x000000, 4, false);
+    const h = Math.max(8, Math.round((w * 28) / 164));
+    if (this.textures.exists('arena_platform')) {
+      this.add.image(cx, topY, 'arena_platform').setOrigin(0.5, 0).setDisplaySize(w, h).setDepth(4);
+    } else {
+      this.addStaticRect(cx, topY + 3, w, 6, PAL_WOOD, 4);
+      this.add.rectangle(cx, topY + 1, w, 2, PAL_WOOD_LIGHT).setDepth(5);
+      this.add.rectangle(cx, topY + 6.5, w, 1, PAL_WOOD_DARK).setDepth(5);
+    }
   }
 
   private deco(x: number, y: number, key: string, depth = 3): void {
