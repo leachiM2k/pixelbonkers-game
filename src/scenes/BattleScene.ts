@@ -205,6 +205,11 @@ export class BattleScene extends Phaser.Scene {
       phase: this.phase,
       p: this.players.map((pl) => ({ x: Math.round(pl.x), hp: pl.hp, dead: pl.isDead })),
     });
+    // Dev/Test-Probe: Waffen-System fuer deterministische E2E-Tests
+    (window as unknown as Record<string, unknown>).__PB_WS = () => ({
+      ws: this.weapons,
+      players: this.players,
+    });
     if (this.netCfg.mode === 'guest') {
       this.hud.showCenterText('WAITING FOR HOST...', 0xf2f0e5);
       const hint = createPixelText(this, GAME_WIDTH / 2, GAME_HEIGHT - 8, 'GUEST: ESC = LEAVE', {

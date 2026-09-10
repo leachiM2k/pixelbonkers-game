@@ -30,10 +30,13 @@ const THROW_ANIM_MS = 240;
 
 interface HasArcadeBody {
   arcadeBody: Phaser.Physics.Arcade.Body;
+  x: number;
+  y: number;
 }
 
 function bodyRect(go: HasArcadeBody): Phaser.Geom.Rectangle {
   const b = go.arcadeBody;
+  if (!b) return new Phaser.Geom.Rectangle(go.x ?? 0, go.y ?? 0, 0, 0);
   return new Phaser.Geom.Rectangle(b.x, b.y, b.width, b.height);
 }
 
@@ -290,6 +293,7 @@ export class WeaponSystem {
             .setScale(isPngKey(`wpn_${pr.def.id}`) ? 1 : 2)
             .setDepth(11);
           this.removeProjectileAt(i);
+          break;
         }
         continue;
       }
