@@ -1,0 +1,407 @@
+{
+  "_comment": "Regionen in sprite.png (Original-Koordinaten, inklusive Grenzen [x1,y1,x2,y2]). Basis: deterministische Component-Analyse (alpha>=64, dilate=1) + Vision-Labeling.",
+  "boys": [
+    {
+      "key": "boy1_idle_0",
+      "cat": "boy1",
+      "bbox": [
+        21,
+        46,
+        68,
+        139
+      ]
+    },
+    {
+      "key": "boy1_walk_0",
+      "cat": "boy1",
+      "bbox": [
+        90,
+        45,
+        140,
+        138
+      ]
+    },
+    {
+      "key": "boy1_walk_1",
+      "cat": "boy1",
+      "bbox": [
+        153,
+        45,
+        204,
+        139
+      ]
+    },
+    {
+      "key": "boy1_run_0",
+      "cat": "boy1",
+      "bbox": [
+        223,
+        44,
+        293,
+        138
+      ]
+    },
+    {
+      "key": "boy1_jump_0",
+      "cat": "boy1",
+      "bbox": [
+        305,
+        42,
+        364,
+        139
+      ]
+    },
+    {
+      "key": "boy1_fall_0",
+      "cat": "boy1",
+      "bbox": [
+        385,
+        22,
+        448,
+        114
+      ]
+    },
+    {
+      "key": "boy1_duck_0",
+      "cat": "boy1",
+      "bbox": [
+        469,
+        57,
+        524,
+        138
+      ]
+    },
+    {
+      "key": "boy1_attack_0",
+      "cat": "boy1",
+      "bbox": [
+        20,
+        184,
+        116,
+        277
+      ]
+    },
+    {
+      "key": "boy1_throw_0",
+      "cat": "boy1",
+      "bbox": [
+        169,
+        180,
+        268,
+        277
+      ]
+    },
+    {
+      "key": "boy1_hit_0",
+      "cat": "boy1",
+      "bbox": [
+        290,
+        191,
+        363,
+        277
+      ]
+    },
+    {
+      "key": "boy1_ko_0",
+      "cat": "boy1",
+      "bbox": [
+        387,
+        239,
+        481,
+        277
+      ]
+    },
+    {
+      "key": "boy1_victory_0",
+      "cat": "boy1",
+      "bbox": [
+        509,
+        180,
+        571,
+        277
+      ]
+    },
+    {
+      "key": "boy2_idle_0",
+      "cat": "boy2",
+      "bbox": [
+        21,
+        362,
+        67,
+        454
+      ]
+    },
+    {
+      "key": "boy2_walk_0",
+      "cat": "boy2",
+      "bbox": [
+        89,
+        362,
+        139,
+        454
+      ]
+    },
+    {
+      "key": "boy2_walk_1",
+      "cat": "boy2",
+      "bbox": [
+        149,
+        362,
+        204,
+        454
+      ]
+    },
+    {
+      "key": "boy2_run_0",
+      "cat": "boy2",
+      "bbox": [
+        227,
+        362,
+        292,
+        454
+      ]
+    },
+    {
+      "key": "boy2_jump_0",
+      "cat": "boy2",
+      "bbox": [
+        305,
+        353,
+        365,
+        454
+      ]
+    },
+    {
+      "key": "boy2_fall_0",
+      "cat": "boy2",
+      "bbox": [
+        385,
+        341,
+        448,
+        433
+      ]
+    },
+    {
+      "key": "boy2_duck_0",
+      "cat": "boy2",
+      "bbox": [
+        465,
+        372,
+        524,
+        453
+      ],
+      "flip": true
+    },
+    {
+      "key": "boy2_attack_0",
+      "cat": "boy2",
+      "bbox": [
+        22,
+        491,
+        114,
+        590
+      ]
+    },
+    {
+      "key": "boy2_throw_0",
+      "cat": "boy2",
+      "bbox": [
+        166,
+        495,
+        263,
+        591
+      ]
+    },
+    {
+      "key": "boy2_hit_0",
+      "cat": "boy2",
+      "bbox": [
+        291,
+        506,
+        362,
+        591
+      ]
+    },
+    {
+      "key": "boy2_ko_0",
+      "cat": "boy2",
+      "bbox": [
+        386,
+        553,
+        481,
+        591
+      ]
+    },
+    {
+      "key": "boy2_victory_0",
+      "cat": "boy2",
+      "bbox": [
+        509,
+        493,
+        571,
+        591
+      ]
+    }
+  ],
+  "weapons": [
+    {
+      "key": "wpn_plunger",
+      "cat": "weapons",
+      "bbox": [
+        624,
+        49,
+        699,
+        138
+      ]
+    },
+    {
+      "key": "wpn_rubberChicken",
+      "cat": "weapons",
+      "bbox": [
+        746,
+        33,
+        827,
+        137
+      ]
+    },
+    {
+      "key": "wpn_banana",
+      "cat": "weapons",
+      "bbox": [
+        867,
+        54,
+        930,
+        124
+      ]
+    },
+    {
+      "key": "wpn_pillow",
+      "cat": "weapons",
+      "bbox": [
+        1002,
+        45,
+        1101,
+        135
+      ]
+    },
+    {
+      "key": "wpn_toiletBrush",
+      "cat": "weapons",
+      "bbox": [
+        628,
+        187,
+        714,
+        275
+      ]
+    },
+    {
+      "key": "wpn_fryingPan",
+      "cat": "weapons",
+      "bbox": [
+        752,
+        182,
+        846,
+        270
+      ]
+    },
+    {
+      "key": "wpn_rubberDuck",
+      "cat": "weapons",
+      "bbox": [
+        886,
+        200,
+        956,
+        265
+      ]
+    },
+    {
+      "key": "wpn_rubberBoot",
+      "cat": "weapons",
+      "bbox": [
+        1025,
+        200,
+        1085,
+        269
+      ]
+    }
+  ],
+  "hud": [
+    {
+      "key": "hud_portrait_1",
+      "cat": "hud",
+      "bbox": [
+        25,
+        690,
+        84,
+        742
+      ],
+      "factor": 3
+    },
+    {
+      "key": "hud_portrait_2",
+      "cat": "hud",
+      "bbox": [
+        529,
+        690,
+        588,
+        742
+      ],
+      "factor": 3
+    },
+    {
+      "key": "hud_heart",
+      "cat": "hud",
+      "bbox": [
+        87,
+        715,
+        109,
+        741
+      ],
+      "factor": 3
+    },
+    {
+      "key": "hud_heart_empty",
+      "cat": "hud",
+      "bbox": [
+        87,
+        715,
+        109,
+        741
+      ],
+      "factor": 3,
+      "grayscale": true
+    },
+    {
+      "key": "hud_bar_frame",
+      "cat": "hud",
+      "bbox": [
+        101,
+        692,
+        264,
+        712
+      ],
+      "size": [
+        64,
+        8
+      ],
+      "clearFill": [
+        107,
+        695,
+        258,
+        708
+      ],
+      "clearInterior": true
+    },
+    {
+      "key": "hud_vs",
+      "cat": "hud",
+      "bbox": [
+        283,
+        691,
+        348,
+        723
+      ],
+      "factor": 3
+    }
+  ]
+}
