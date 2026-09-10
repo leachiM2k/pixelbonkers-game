@@ -24,10 +24,76 @@
     canvas {
       image-rendering: auto;
     }
+    #kb-notice {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: #101018;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      color: #f2f0e5;
+      text-align: center;
+    }
+    #kb-notice[hidden] { display: none; }
+    #kb-notice .box {
+      border: 3px solid #f8d848;
+      background: #1a1c2c;
+      padding: 24px 28px;
+      max-width: 520px;
+      margin: 0 16px;
+    }
+    #kb-notice h1 {
+      color: #f8d848;
+      font-size: 20px;
+      letter-spacing: 2px;
+      margin: 0 0 14px;
+    }
+    #kb-notice p { font-size: 14px; line-height: 1.6; margin: 0 0 10px; }
+    #kb-notice .keys { color: #7dd3fc; }
+    #kb-notice button {
+      margin-top: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      letter-spacing: 1px;
+      background: #f8d848;
+      color: #1a1c2c;
+      border: none;
+      padding: 10px 18px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <div id="game"></div>
+  <div id="kb-notice" hidden>
+    <div class="box">
+      <h1>NUR MIT TASTATUR SPIELBAR</h1>
+      <p>PIXEL BONKERS ist ein 2-Spieler-Kampfspiel und braucht eine Tastatur:</p>
+      <p class="keys">P1: WASD + F/G &nbsp;&nbsp; P2: IJKL + H/U</p>
+      <p>Tastatur angeschlossen? Dann druecke jetzt eine beliebige Taste.</p>
+      <button id="kb-anyway" type="button">TROTZDEM OEFFNEN</button>
+    </div>
+  </div>
+  <script>
+    // Tastatur-Hinweis auf Touch-Geraeten (Mobil). Eine verlaessliche
+    // "Tastatur angeschlossen?"-API gibt es im Browser nicht - der Druck
+    // einer beliebigen Taste ist der praktische Nachweis und schliesst
+    // den Hinweis (deckt auch iPad/Cover-Tastaturen ab).
+    (function () {
+      var el = document.getElementById('kb-notice');
+      if (!el) return;
+      var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      var touch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+      var mobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      if (!((coarse || mobileUA) && touch)) return; // Desktop mit Maus: kein Hinweis
+      el.hidden = false;
+      var close = function () { el.hidden = true; el = null; };
+      document.getElementById('kb-anyway').addEventListener('click', close);
+      window.addEventListener('keydown', close, { once: true });
+    })();
+  </script>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
