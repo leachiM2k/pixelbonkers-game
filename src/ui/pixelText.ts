@@ -234,7 +234,7 @@ export function createPixelText(
     return scene.textures.get(key).getSourceImage().width * (slicedChars.has(ch) ? FONT_DISPLAY_SCALE : 1);
   };
   const SPACE_W = 4;
-  const widths = chars.map((ch) => (ch === ' ' ? SPACE_W : glyphW(ch)));
+  const widths = chars.map((ch) => (ch === ' ' ? SPACE_W : glyphW(ch)) * scale);
   const totalW = widths.reduce((a, b) => a + b, 0) + spacing * Math.max(0, chars.length - 1);
 
   let cursor = 0;
