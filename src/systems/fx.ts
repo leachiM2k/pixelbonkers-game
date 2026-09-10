@@ -143,8 +143,8 @@ export class FxSystem {
     let obj: Phaser.GameObjects.Image | Phaser.GameObjects.Container;
     let targetScale: number;
     if (asset) {
-      obj = this.scene.add.image(x, y, asset).setDepth(999);
-      targetScale = this.wordAssetScale(asset);
+      obj = this.scene.add.image(x, y, asset.key).setDepth(999);
+      targetScale = this.wordAssetScale(asset.key, asset.width);
     } else {
       obj = createPixelText(this.scene, x, y, word, {
         scale: 2,
@@ -178,21 +178,23 @@ export class FxSystem {
     });
   }
 
-  /** Comic-Wort -> PNG-Asset (BONK!/POW!/SQUEAK! + Melee-PLOP als Wolke). */
-  private hitWordAsset(word: string): string | null {
-    const map: Record<string, string> = {
-      'BONK!': 'hit_bonk',
-      'POW!': 'hit_pow',
-      'SQUEAK!': 'hit_squeak',
-      'PLOP!': 'hit_cloud',
+  /** Comic-Wort -> PNG-Asset (pro Wort: Asset + Anzeige-Breite). Keine Waffe faellt auf Text zurueck. */
+  private hitWordAsset(word: string): { key: string; width: number } | null {
+    const map: Record<string, [string, number]> = {
+      'BONK!': ['hit_bonk', 60],      // Poempel
+      'BOINK!': ['hit_bonk', 56],     // Gummistiefel (Bonk-Familie)
+      'POW!': ['hit_pow', 60],        // Bratpfanne
+      'WHACK!': ['hit_pow', 64],      // Kissen (schwerer Treffer)
+      'SQUEAK!': ['hit_squeak', 66],  // Gummihuhn + Quietschente
+      'SMACK!': ['hit_cloud', 40],    // Klobuerste (Staub-Puff)
+      'PLOP!': ['hit_cloud', 22],     // Melee + Banane (weicher Puff)
     };
-    const key = map[word];
-    return key && this.scene.textures.exists(key) ? key : null;
+    const e = map[word];
+    return e && this.scene.textures.exists(e[0]) ? { key: e[0], width: e[1] } : null;
   }
 
-  private wordAssetScale(key: string): number {
+  private wordAssetScale(key: string, targetWidth: number): number {
     const w = this.scene.textures.get(key).getSourceImage().width;
-    const targetWidth = key === 'hit_cloud' ? 22 : key === 'hit_squeak' ? 66 : 60;
     return targetWidth / w;
   }
 
