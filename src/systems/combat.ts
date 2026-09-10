@@ -8,6 +8,7 @@
 // Events auf scene.events: EV.PLAYER_DAMAGE, EV.HIT_LANDED, EV.PLAYER_KO, EV.KO, EV.ROUND_END
 import Phaser from 'phaser';
 import { EV, WEAPONS, WeaponId } from '../types';
+import { settings } from '../game/settings';
 import { Player, safePlayAnim, PLAYER_BODY_W } from '../entities/Player';
 import { FxSystem } from './fx';
 import { AudioSystem } from './audio';
@@ -113,6 +114,7 @@ export class CombatSystem {
   }
 
   tryMelee(player: Player): void {
+    if (!settings.melee) return;
     const now = this.scene.time.now;
     const idx = player.idx;
     const st = this.attacks[idx];

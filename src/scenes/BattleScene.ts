@@ -21,8 +21,10 @@ import { PLAYER_MAX_HP } from '../entities/Player';
 const GROUND_TOP = 188;
 const ROUND_MS = 60000;
 const COUNTDOWN_STEP_MS = 800;
-const PAL_GRASS = 0x48a838;
-const PAL_GRASS_LIGHT = 0x28d84a;
+const PAL_GRASS_HIDDEN = 0x48a838;
+const PAL_WOOD = 0x8a5a30;
+const PAL_WOOD_LIGHT = 0xc89858;
+const PAL_WOOD_DARK = 0x5a3820;
 
 type Phase = 'countdown' | 'fight' | 'ko' | 'result';
 
@@ -198,6 +200,11 @@ export class BattleScene extends Phaser.Scene {
       }
     });
     this.setupNet();
+    // Dev/Test-Probe: Live-State fuer E2E-Tests (read-only)
+    (window as unknown as Record<string, unknown>).__PB_STATE = () => ({
+      phase: this.phase,
+      p: this.players.map((pl) => ({ x: Math.round(pl.x), hp: pl.hp, dead: pl.isDead })),
+    });
     if (this.netCfg.mode === 'guest') {
       this.hud.showCenterText('WAITING FOR HOST...', 0xf2f0e5);
       const hint = createPixelText(this, GAME_WIDTH / 2, GAME_HEIGHT - 8, 'GUEST: ESC = LEAVE', {
@@ -267,7 +274,7 @@ export class BattleScene extends Phaser.Scene {
       .setDisplaySize(GAME_WIDTH, GAME_HEIGHT)
       .setDepth(0);
     this.platforms = this.physics.add.staticGroup();
-    this.addStaticRect(GAME_WIDTH / 2, GROUND_TOP + 14, GAME_WIDTH, 28, PAL_GRASS, 1, false);
+    this.addStaticRect(GAME_WIDTH / 2, GROUND_TOP + 14, GAME_WIDTH, 28, PAL_GRASS_HIDDEN, 1, false);
     this.addPlatform(48, 150, 70);
     this.addPlatform(336, 150, 70);
     this.addPlatform(192, 170, 44);
@@ -312,8 +319,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private addPlatform(cx: number, topY: number, w: number): void {
-    this.addStaticRect(cx, topY + 3, w, 6, PAL_GRASS, 4);
-    this.add.rectangle(cx, topY + 1, w, 2, PAL_GRASS_LIGHT).setDepth(5);
+    this.addStaticRect(cx, topY + 3, w, 6, PAL_WOOD, 4);
+    this.add.rectangle(cx, topY + 1, w, 2, PAL_WOOD_LIGHT).setDepth(5);
+    this.add.rectangle(cx, topY + 6.5, w, 1, PAL_WOOD_DARK).setDepth(5);
   }
 
   private deco(x: number, y: number, key: string, depth = 3): void {

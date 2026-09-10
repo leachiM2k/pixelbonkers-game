@@ -18,7 +18,7 @@ const COLOR_DARK = 0x1a1c2c;
 const COLOR_RED = 0xe04848;
 const COLOR_GREEN = 0x28d84a;
 
-type ToggleKey = 'sound' | 'music' | 'screenShake';
+type ToggleKey = 'sound' | 'music' | 'screenShake' | 'melee';
 
 interface MenuItem {
   label: () => string;
@@ -32,6 +32,7 @@ export class MainMenuScene extends Phaser.Scene {
   private itemTexts: Phaser.GameObjects.Container[] = [];
   private cursor!: Phaser.GameObjects.Image;
   private selection = 0;
+  private menuMode: 'main' | 'settings' = 'main';
   private coinText: Phaser.GameObjects.Container | null = null;
   private coinTween: Phaser.Tweens.Tween | null = null;
   private showCredits = false;
@@ -156,10 +157,17 @@ export class MainMenuScene extends Phaser.Scene {
     this.tweens.add({ targets: pressEnter, alpha: 0, duration: 450, yoyo: true, repeat: -1 });
   }
 
-  private buildMenu(): void {
-    this.items = [
+  private mainItems(): MenuItem[] {
+    return [
       { label: () => 'VS LOCAL', run: () => this.scene.start('BattleScene') },
       { label: () => 'ONLINE', run: () => this.openOnlineMenu() },
+      { label: () => 'SETTINGS', run: () => this.openSettings() },
+      { label: () => 'CONTROLS', run: () => this.controls.create(this) },
+    ];
+  }
+
+  private settingsItems(): MenuItem[] {
+    return [
       { label: () => `SOUND: ${settings.sound ? 'ON' : 'OFF'}`, run: () => this.toggle('sound') },
       { label: () => `MUSIC: ${settings.music ? 'ON' : 'OFF'}`, run: () => this.toggle('music') },
       {
@@ -167,10 +175,29 @@ export class MainMenuScene extends Phaser.Scene {
         run: () => this.toggle('screenShake'),
       },
       { label: () => 'FULLSCREEN', run: () => this.scale.toggleFullscreen() },
-      { label: () => 'CONTROLS', run: () => this.controls.create(this) },
+      { label: () => `MELEE: ${settings.melee ? 'ON' : 'OFF'}`, run: () => this.toggle('melee') },
+      { label: () => 'BACK', run: () => this.openMainMenu() },
     ];
+  }
+
+  private buildMenu(): void {
     this.cursor = this.add.image(this.menuX - 6, this.menuBaseY, 'font_>');
     this.cursor.setOrigin(0, 0);
+    this.items = this.mainItems();
+    this.renderItems();
+  }
+
+  private openSettings(): void {
+    this.menuMode = 'settings';
+    this.selection = 0;
+    this.items = this.settingsItems();
+    this.renderItems();
+  }
+
+  private openMainMenu(): void {
+    this.menuMode = 'main';
+    this.selection = 2;
+    this.items = this.mainItems();
     this.renderItems();
   }
 
@@ -258,6 +285,11 @@ export class MainMenuScene extends Phaser.Scene {
 
   private onEscape(): void {
     if (this.controls.isOpen || this.onlineMenu?.isOpen) return;
+    if (this.menuMode === 'settings') {
+      this.audio.play('menuSelect');
+      this.openMainMenu();
+      return;
+    }
     this.showCredits = !this.showCredits;
     this.renderCoin();
   }

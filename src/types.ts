@@ -139,5 +139,7 @@ export interface GameSettings {
   sound: boolean;
   music: boolean;
   screenShake: boolean;
+  /** false = Nahkampfangriffe deaktiviert (nur Werfen) */
+  melee: boolean;
 }
-export const DEFAULT_SETTINGS: GameSettings = { sound: true, music: true, screenShake: true };
+export const DEFAULT_SETTINGS: GameSettings = { sound: true, music: true, screenShake: true, melee: true };
