@@ -4,6 +4,7 @@ import { allSprites, buildAnimations } from '../sprites';
 import { PNG_SPRITE_KEYS, pngLoadedKeys } from '../sprites/manifest';
 import { SpritePreviewScene } from '../sprites/__preview';
 import { registerFontTextures } from '../ui/pixelText';
+import { GAME_WIDTH, GAME_HEIGHT } from '../types';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -20,6 +21,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.cameras.main.setZoom(2).centerOn(GAME_WIDTH / 2, GAME_HEIGHT / 2);
     // PNG-Texturen: geladene Keys markieren + LINEAR-Filter (weiche Sheet-Optik)
     for (const key of PNG_SPRITE_KEYS) {
       if (this.textures.exists(key) && this.textures.get(key).source[0].image) {

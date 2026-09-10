@@ -51,6 +51,7 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.cameras.main.setZoom(2).centerOn(GAME_WIDTH / 2, GAME_HEIGHT / 2);
     if (typeof window !== 'undefined' && window.location.search.includes('nettest=host')) {
       this.scene.start('BattleScene', { mode: 'host' });
       return;

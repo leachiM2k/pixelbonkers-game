@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { GAME_WIDTH, GAME_HEIGHT } from '../types';
 import { createPixelText } from '../ui/pixelText';
 import { PixelSprite } from '../art/pixelToTexture';
 import { boy1Sprites } from './boy1';
@@ -28,6 +29,7 @@ export class SpritePreviewScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.cameras.main.setZoom(2).centerOn(GAME_WIDTH / 2, GAME_HEIGHT / 2);
     const cam = this.cameras.main;
     cam.setBackgroundColor('#12162a');
     cam.setZoom(ZOOM);

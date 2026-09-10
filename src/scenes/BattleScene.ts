@@ -123,6 +123,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.cameras.main.setZoom(2).centerOn(GAME_WIDTH / 2, GAME_HEIGHT / 2);
     this.phase = 'countdown';
     this.paused = false;
     this.netKeepSession = false;

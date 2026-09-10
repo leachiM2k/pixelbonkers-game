@@ -5,8 +5,10 @@ export function createGameConfig(sceneClasses: Phaser.Types.Scenes.SceneType[]):
   return {
     type: Phaser.AUTO,
     parent: 'game',
-    width: GAME_WIDTH,
-    height: GAME_HEIGHT,
+    // Backing-Store 768x432 (doppelte Aufloesung); die Kamera zeigt per Zoom 2
+    // die unveraenderte 384x216-Welt - alle Logik-/Weltkoordinaten bleiben gleich.
+    width: GAME_WIDTH * 2,
+    height: GAME_HEIGHT * 2,
     backgroundColor: '#5c94ec',
     pixelArt: true,
     roundPixels: true,
