@@ -172,7 +172,7 @@ export class Hud {
       .setDisplaySize(44, 22)
       .setDepth(HUD_DEPTH);
     // TIME-Box: gezeichneter schwarzer Rahmen, transparenter Innenraum
-    const boxW = 34, boxH = 22, boxX = GAME_WIDTH / 2 - boxW / 2, boxY = 14.5;
+    const boxW = 34, boxH = 22, boxX = GAME_WIDTH / 2 - boxW / 2, boxY = 26;
     scene.add
       .rectangle(boxX + boxW / 2, boxY + boxH / 2, boxW, boxH)
       .setStrokeStyle(1, FRAME_BLACK)
@@ -200,7 +200,7 @@ export class Hud {
     this.timerText?.destroy();
     this.timerText = null;
     const low = s <= 10;
-    this.timerText = createPixelText(this.scene, GAME_WIDTH / 2, 24, String(s).padStart(2, '0'), {
+    this.timerText = createPixelText(this.scene, GAME_WIDTH / 2, 36, String(s).padStart(2, '0'), {
       scale: 2,
       originX: 0.5,
       color: low ? 0xfa2042 : COLOR_GOLD,
