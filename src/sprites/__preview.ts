@@ -7,7 +7,7 @@ import { weaponSprites } from './weapons';
 import { hudSprites } from './hud';
 import { fxSprites } from '../systems/fx';
 import { isPngKey } from './manifest';
-import { SHEET_SCALE } from './sheetScale';
+import { SHEET_SCALE, weaponDisplayScale } from './sheetScale';
 
 const ZOOM = 384 / 1050;
 
@@ -64,7 +64,7 @@ export class SpritePreviewScene extends Phaser.Scene {
       const x = col * cellW + cellW / 2;
       const bottom = y0 + row * rowH + bottomInRow;
       if (!this.textures.exists(s.key)) return;
-      this.add.image(x, bottom, s.key).setOrigin(0.5, 1).setScale(isPngKey(s.key) ? SHEET_SCALE : scale);
+      this.add.image(x, bottom, s.key).setOrigin(0.5, 1).setScale(isPngKey(s.key) ? (s.key.startsWith('wpn_') ? weaponDisplayScale(s.rows.length) : SHEET_SCALE) : scale);
       createPixelText(this, x, bottom + 2, labelOf(s.key), { scale: 1, originX: 0.5 });
     });
     return y0 + Math.ceil(sprites.length / cols) * rowH;
@@ -72,7 +72,7 @@ export class SpritePreviewScene extends Phaser.Scene {
 
   private place(key: string, x: number, bottom: number, scale: number): void {
     if (!this.textures.exists(key)) return;
-    this.add.image(x, bottom, key).setOrigin(0.5, 1).setScale(isPngKey(key) ? SHEET_SCALE : scale);
+    this.add.image(x, bottom, key).setOrigin(0.5, 1).setScale(isPngKey(key) ? (key.startsWith('wpn_') ? weaponDisplayScale(this.textures.get(key).getSourceImage().height) : SHEET_SCALE) : scale);
     createPixelText(this, x, bottom + 2, labelOf(key), { scale: 1, originX: 0.5 });
   }
 

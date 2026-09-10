@@ -1,7 +1,13 @@
 // Generiert von extract3.mjs - NICHT von Hand editieren.
 // SHEET_SCALE: einheitlicher Anzeigefaktor (Figur 66px wie bisher, native Sheet-Proportionen).
+// WEAPON_DISPLAY_H: einheitliche Waffen-Anzeigehoehe (per-Textur-Skalierung, comic aber handlich).
 // WEAPON_BODY: Hitbox-Pinning der Waffen auf die vorherigen Pixelmaße (Gameplay unveraendert).
 export const SHEET_SCALE = 2 / 3;
+export const WEAPON_DISPLAY_H = 40;
+
+export function weaponDisplayScale(textureHeight: number): number {
+  return WEAPON_DISPLAY_H / textureHeight;
+}
 
 export const WEAPON_BODY: Record<string, { w: number; h: number }> = {
   wpn_plunger: { w: 27, h: 32 },

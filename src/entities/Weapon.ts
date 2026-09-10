@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, WeaponId } from '../types';
 import { isPngKey } from '../sprites/manifest';
-import { SHEET_SCALE, WEAPON_BODY } from '../sprites/sheetScale';
+import { WEAPON_BODY, weaponDisplayScale } from '../sprites/sheetScale';
 
 export const WEAPON_LIFETIME_MS = 12000;
 export const WEAPON_BLINK_MS = 2000;
@@ -22,7 +22,7 @@ export class Weapon extends Phaser.Physics.Arcade.Image {
     this.weaponId = weaponId;
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    this.setScale(isPngKey(this.texture.key) ? SHEET_SCALE : 2).setDepth(11);
+    this.setScale(isPngKey(this.texture.key) ? weaponDisplayScale(this.height) : 2).setDepth(11);
     const pin = WEAPON_BODY[this.texture.key];
     if (pin) this.arcadeBody.setSize(pin.w, pin.h, true);
     this.arcadeBody.setBounce(0.3);
