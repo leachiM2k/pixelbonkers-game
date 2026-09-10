@@ -122,15 +122,10 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   private buildTitle(): void {
-    // Logo aus dem Original-Sheet (Fallback: PixelText-Titel)
-    if (this.textures.exists('menu_logo')) {
-      const logo = this.add.image(GAME_WIDTH / 2, 10, 'menu_logo');
-      logo.setOrigin(0.5, 0);
-      if (this.textures.exists('menu_subtitle')) {
-        this.add.image(GAME_WIDTH / 2, 54, 'menu_subtitle').setOrigin(0.5, 0);
-      } else {
-        createPixelText(this, GAME_WIDTH / 2, 54, '2 PLAYER MAYHEM', { scale: 1, originX: 0.5, color: COLOR_WHITE });
-      }
+    // Kombi-Titel (Logo + Untertitel) als ein Asset (Fallback: PixelText-Titel)
+    if (this.textures.exists('menu_title')) {
+      const title = this.add.image(GAME_WIDTH / 2, 10, 'menu_title');
+      title.setOrigin(0.5, 0);
     } else {
       const title = this.add.container(GAME_WIDTH / 2, 14);
       title.add(
