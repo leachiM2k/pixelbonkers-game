@@ -5,7 +5,7 @@
 // Arena-Deko + HUD: PNGs in Matrix-Mass (Anzeige via hud.ts scale 1 / deco() scale 2).
 export const PNG_SPRITE_KEYS: string[] = [
   "arena_sky",
-  "menu_logo", "menu_subtitle",
+  "menu_title",
   "arena_bench", "arena_bush", "arena_flower_0", "arena_flower_1",
   "arena_grass_0", "arena_grass_1", "arena_grass_2", "arena_lamp",
   "arena_trashcan", "arena_tree", "boy1_attack_0", "boy1_attack_1",
@@ -27,6 +27,8 @@ export const PNG_SPRITE_KEYS: string[] = [
   "wpn_fryingPan", "wpn_pillow", "wpn_plunger", "wpn_rubberBoot",
   "wpnp_plunger", "wpnp_rubberChicken", "wpnp_banana", "wpnp_pillow",
   "wpnp_toiletBrush", "wpnp_fryingPan", "wpnp_rubberDuck",
+  "hit_bonk", "hit_pow", "hit_squeak", "hit_cloud",
+  "hit_explosion", "hit_particle", "hit_stars",
   "wpn_rubberChicken", "wpn_rubberDuck", "wpn_toiletBrush",
 ];
 

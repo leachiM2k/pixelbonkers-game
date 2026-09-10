@@ -8,7 +8,7 @@ import { settings } from '../game/settings';
 //   fx_explosion_0..3 (Palette-Zeichen aus src/art/palette.ts, '.' = transparent).
 // - class FxSystem:
 //     hitBurst(x, y, power: 0|1|2)   Treffer-Effekt (Blitz/Partikel/Explosion)
-//     comicWord(x, y, word, color?)  Pixel-Comic-Text ~0.7s, max 1 pro 24px-Bereich
+//     comicWord(x, y, word, color?)  Comic-Burst als PNG-Asset (hit_*), sonst Pixel-Text; ~0.7s, max 1 pro 24px-Bereich
 //     screenShake(intensityPx)       respektiert settings.screenShake
 //     koStars(x, y)                  4 kreisende Sterne ~1s
 //     hitstop(ms)                    pausiert NUR Arcade-Physik; Clock/Tweens laufen weiter
@@ -51,7 +51,7 @@ interface Particle {
 export class FxSystem {
   private scene: Phaser.Scene;
   private pool: Particle[] = [];
-  private words = new Map<string, Phaser.GameObjects.Container>();
+  private words = new Map<string, Phaser.GameObjects.Image | Phaser.GameObjects.Container>();
   private hitstopPending = 0;
 
   constructor(scene: Phaser.Scene) {
@@ -81,14 +81,21 @@ export class FxSystem {
   hitBurst(x: number, y: number, power: 0 | 1 | 2): void {
     const ri = (a: number, b: number) => a + Math.floor(Math.random() * (b - a + 1));
     const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+    const png = (k: string) => this.scene.textures.exists(k);
+    const sparkKey = png('hit_particle') ? 'hit_particle'
+      : Math.random() < 0.5 ? 'fx_spark_0' : 'fx_spark_1';
+    const starKey = png('hit_stars') ? 'hit_stars' : 'fx_star';
+    const sparkScale = sparkKey === 'hit_particle' ? 0.4 : 1;
+    const starScale = starKey === 'hit_stars' ? (power === 2 ? 0.5 : 0.35) : 1;
     if (power === 0) {
       this.flash(x, y);
+      this.puffCloud(x, y);
       const n = ri(5, 10);
       for (let i = 0; i < n; i++) {
         const ang = rnd(0, Math.PI * 2);
         const sp = rnd(50, 130);
-        this.spawn(Math.random() < 0.5 ? 'fx_spark_0' : 'fx_spark_1', x, y,
-          Math.cos(ang) * sp, Math.sin(ang) * sp - 30, rnd(0.25, 0.5), 550, rnd(-360, 360), 1);
+        this.spawn(sparkKey, x, y,
+          Math.cos(ang) * sp, Math.sin(ang) * sp - 30, rnd(0.25, 0.5), 550, rnd(-360, 360), sparkScale);
       }
     } else if (power === 1) {
       this.explosion(x, y);
@@ -96,9 +103,9 @@ export class FxSystem {
       for (let i = 0; i < n; i++) {
         const ang = rnd(0, Math.PI * 2);
         const sp = rnd(70, 190);
-        const key = ['fx_spark_0', 'fx_spark_1', 'fx_star'][ri(0, 2)];
-        this.spawn(key, x, y, Math.cos(ang) * sp, Math.sin(ang) * sp - 40,
-          rnd(0.3, 0.6), 600, rnd(-540, 540), 1);
+        const useStar = sparkKey === 'hit_particle' ? Math.random() < 0.33 : ri(0, 2) === 2;
+        this.spawn(useStar ? starKey : sparkKey, x, y, Math.cos(ang) * sp, Math.sin(ang) * sp - 40,
+          rnd(0.3, 0.6), 600, rnd(-540, 540), useStar ? starScale : sparkScale);
       }
     } else {
       this.flash(x, y);
@@ -108,42 +115,102 @@ export class FxSystem {
         const ang = rnd(0, Math.PI * 2);
         const sp = rnd(80, 240);
         const star = Math.random() < 0.35;
-        const key = star ? 'fx_star' : Math.random() < 0.5 ? 'fx_spark_0' : 'fx_spark_1';
-        this.spawn(key, x, y, Math.cos(ang) * sp, Math.sin(ang) * sp - (star ? 90 : 50),
-          rnd(0.4, 0.9), star ? 250 : 650, rnd(-540, 540), star ? rnd(1, 1.5) : 1);
+        let key: string;
+        let scale: number;
+        let rise = 50;
+        if (star) {
+          key = starKey;
+          rise = 90;
+          scale = starKey === 'hit_stars' ? 0.5 : rnd(1, 1.5);
+        } else if (sparkKey === 'hit_particle') {
+          key = sparkKey;
+          scale = sparkScale;
+        } else {
+          key = Math.random() < 0.5 ? 'fx_spark_0' : 'fx_spark_1';
+          scale = 1;
+        }
+        this.spawn(key, x, y, Math.cos(ang) * sp, Math.sin(ang) * sp - rise,
+          rnd(0.4, 0.9), star ? 250 : 650, rnd(-540, 540), scale);
       }
     }
   }
 
   comicWord(x: number, y: number, word: string, color?: number): void {
+    const asset = this.hitWordAsset(word);
     const bucket = `${Math.floor(x / 24)},${Math.floor(y / 24)}`;
     const old = this.words.get(bucket);
     if (old) old.destroy();
-    const container = createPixelText(this.scene, x, y, word, {
-      scale: 2,
-      originX: 0.5,
-      color: color ?? 0xffffff,
-    });
-    container.setDepth(999);
-    container.setScale(2.5);
-    this.words.set(bucket, container);
+    let obj: Phaser.GameObjects.Image | Phaser.GameObjects.Container;
+    let targetScale: number;
+    if (asset) {
+      obj = this.scene.add.image(x, y, asset).setDepth(999);
+      targetScale = this.wordAssetScale(asset);
+    } else {
+      obj = createPixelText(this.scene, x, y, word, {
+        scale: 2,
+        originX: 0.5,
+        color: color ?? 0xffffff,
+      });
+      obj.setDepth(999);
+      targetScale = 2;
+    }
+    obj.setScale(targetScale * 1.25);
+    this.words.set(bucket, obj);
     this.scene.tweens.add({
-      targets: container,
-      scale: 2,
+      targets: obj,
+      scale: targetScale,
       duration: 80,
       ease: 'Back.easeOut',
       onComplete: () => {
         this.scene.time.delayedCall(500, () => {
           this.scene.tweens.add({
-            targets: container,
+            targets: obj,
             alpha: 0,
             y: y - 6,
             duration: 150,
             onComplete: () => {
-              if (this.words.get(bucket) === container) this.words.delete(bucket);
-              container.destroy();
+              if (this.words.get(bucket) === obj) this.words.delete(bucket);
+              obj.destroy();
             },
           });
+        });
+      },
+    });
+  }
+
+  /** Comic-Wort -> PNG-Asset (BONK!/POW!/SQUEAK! + Melee-PLOP als Wolke). */
+  private hitWordAsset(word: string): string | null {
+    const map: Record<string, string> = {
+      'BONK!': 'hit_bonk',
+      'POW!': 'hit_pow',
+      'SQUEAK!': 'hit_squeak',
+      'PLOP!': 'hit_cloud',
+    };
+    const key = map[word];
+    return key && this.scene.textures.exists(key) ? key : null;
+  }
+
+  private wordAssetScale(key: string): number {
+    const w = this.scene.textures.get(key).getSourceImage().width;
+    const targetWidth = key === 'hit_cloud' ? 22 : key === 'hit_squeak' ? 66 : 60;
+    return targetWidth / w;
+  }
+
+  /** Weisser Wolken-Puff (hit_cloud) am Aufprallort, Matrix-Fallback: keiner. */
+  private puffCloud(x: number, y: number): void {
+    if (!this.scene.textures.exists('hit_cloud')) return;
+    const img = this.scene.add.image(x, y, 'hit_cloud').setDepth(898).setScale(0.4);
+    this.scene.tweens.add({
+      targets: img,
+      scale: 0.9,
+      duration: 90,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.scene.tweens.add({
+          targets: img,
+          alpha: 0,
+          duration: 130,
+          onComplete: () => img.destroy(),
         });
       },
     });
@@ -225,6 +292,24 @@ export class FxSystem {
   }
 
   private explosion(x: number, y: number): void {
+    if (this.scene.textures.exists('hit_explosion')) {
+      const img = this.scene.add.image(x, y, 'hit_explosion').setDepth(899).setScale(0.3);
+      this.scene.tweens.add({
+        targets: img,
+        scale: 0.85,
+        duration: 110,
+        ease: 'Back.easeOut',
+        onComplete: () => {
+          this.scene.tweens.add({
+            targets: img,
+            alpha: 0,
+            duration: 140,
+            onComplete: () => img.destroy(),
+          });
+        },
+      });
+      return;
+    }
     if (!this.scene.textures.exists('fx_explosion_0')) return;
     const img = this.scene.add.image(x, y, 'fx_explosion_0').setDepth(899);
     let frame = 0;
