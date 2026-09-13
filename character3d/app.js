@@ -1,11 +1,15 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
-import { buildCharacter } from './model.js';
-import { POSE_ORDER, applyPose, aposeAngles } from './poses.js';
+import { buildCharacter, footPointsOf } from './model.js';
+import { getCharacter, CHARACTER_ORDER, CHARACTERS } from './characters.js';
+import { POSE_ORDER, applyPose, aposeAngles, POSE_VIEWS } from './poses.js';
 
 const params = new URLSearchParams(location.search);
 const HEADLESS = params.has('headless');
+const CHAR_NAME = params.get('char') ?? 'teen';
+const { prefix: PREFIX, config: CHAR_CONFIG } = getCharacter(CHAR_NAME);
+const FOOT_POINTS = footPointsOf(CHAR_CONFIG);
 const RENDER_SIZE = 1024;
 const OUT_SIZE = 512;
 
@@ -19,29 +23,50 @@ document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(25, 1, 0.1, 50);
-function aimCamera(az = 30, el = 8, dist = 4.7, targetY = 0.85) {
-  const e = el * Math.PI / 180;
-  const a = az * Math.PI / 180;
-  camera.position.set(
-    dist * Math.cos(e) * Math.sin(a),
-    targetY + dist * Math.sin(e),
-    dist * Math.cos(e) * Math.cos(a)
-  );
-  camera.lookAt(0, targetY, 0);
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 50);
+const BASE_VIEW = 1.95;
+const HEAD_Y = 0.9;
+function aimCamera(vs = BASE_VIEW, cx = 0, cy = HEAD_Y) {
+  const h = vs / 2;
+  camera.left = -h;
+  camera.right = h;
+  camera.top = h;
+  camera.bottom = -h;
+  camera.position.set(cx, cy, 6);
+  camera.lookAt(cx, cy, 0);
+  camera.updateProjectionMatrix();
 }
 aimCamera();
+
+function frameCamera(name) {
+  char.root.updateMatrixWorld(true);
+  const bbox = new THREE.Box3().setFromObject(char.root);
+  const size = bbox.getSize(new THREE.Vector3());
+  const center = bbox.getCenter(new THREE.Vector3());
+  const vsY = Math.max(size.y + 0.3, 2 * (bbox.max.y - HEAD_Y) + 0.15, 2 * (HEAD_Y - bbox.min.y) + 0.15);
+  const az = POSE_VIEWS[name] ?? 0;
+  if (az !== 0) {
+    const vs = Math.max(BASE_VIEW, vsY);
+    orbitCamera(az, HEAD_Y, vs);
+    return { vs, cx: 0, cy: HEAD_Y, az, minX: bbox.min.x, maxX: bbox.max.x, minY: bbox.min.y, maxY: bbox.max.y };
+  }
+  const maxDistX = Math.max(Math.abs(bbox.min.x), Math.abs(bbox.max.x));
+  const vs = Math.max(BASE_VIEW, vsY, 2 * maxDistX + 0.25);
+  const cx = vs > BASE_VIEW ? center.x : 0;
+  aimCamera(vs, cx);
+  return { vs, cx, cy: HEAD_Y, az: 0, minX: bbox.min.x, maxX: bbox.max.x, minY: bbox.min.y, maxY: bbox.max.y };
+}
 
 const hemi = new THREE.HemisphereLight(0xd9ecff, 0x9c8668, 1.35);
 scene.add(hemi);
 const key = new THREE.DirectionalLight(0xfff2e0, 2.6);
-key.position.set(2.6, 4.2, 3.0);
+key.position.set(2.2, 4.0, 1.4);
 scene.add(key);
 const rim = new THREE.DirectionalLight(0xbcd6ff, 1.4);
 rim.position.set(-3.2, 2.6, -2.6);
 scene.add(rim);
 
-const char = buildCharacter();
+const char = buildCharacter(CHAR_CONFIG);
 scene.add(char.root);
 
 let outlines = [];
@@ -108,17 +133,23 @@ async function postSave(name, data) {
 
 async function renderAll() {
   const shots = [];
+  const meta = { standingHeightM: 0, poses: {} };
+  applyPose(char.joints, 'idle_0', FOOT_POINTS);
+  char.root.updateMatrixWorld(true);
+  meta.standingHeightM = new THREE.Box3().setFromObject(char.root).getSize(new THREE.Vector3()).y;
   for (const name of POSE_ORDER) {
-    applyPose(char.joints, name);
+    applyPose(char.joints, name, FOOT_POINTS);
+    meta.poses[name] = frameCamera(name);
     const url = renderToDataURL();
     shots.push({ name, url });
-    await postSave(`teen_${name}.png`, url);
+    await postSave(`${PREFIX}_${name}.png`, url);
     await frame();
   }
+  await postSave(`${PREFIX}_meta.json`, JSON.stringify(meta));
   const sheetUrl = await buildSheet(shots);
-  await postSave('teen_preview_sheet.png', sheetUrl);
+  await postSave(`${PREFIX}_preview_sheet.png`, sheetUrl);
   const glb = await exportGLB();
-  await postSave('teen.glb', glb);
+  await postSave(`${PREFIX}.glb`, glb);
   return shots.length;
 }
 
@@ -189,10 +220,59 @@ function frame() {
   return new Promise((r) => requestAnimationFrame(r));
 }
 
+async function debugSheet(names, azimuths = [6, 30, 60]) {
+  const cell = 224;
+  const c = document.createElement('canvas');
+  c.width = azimuths.length * cell;
+  c.height = names.length * cell;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#23262e';
+  ctx.fillRect(0, 0, c.width, c.height);
+  let col = 0, row = 0;
+  for (const name of names) {
+    for (const az of azimuths) {
+      applyPose(char.joints, name, FOOT_POINTS);
+      frameCamera();
+      orbitCamera(az, 0.9, 1.95);
+      renderer.render(scene, camera);
+      const tmp = document.createElement('canvas');
+      tmp.width = cell; tmp.height = cell;
+      tmp.getContext('2d').drawImage(renderer.domElement, 0, 0, cell, cell);
+      ctx.drawImage(tmp, col * cell, row * cell);
+      col++;
+    }
+    ctx.fillStyle = '#9aa3b5';
+    ctx.font = '13px ui-monospace, monospace';
+    ctx.textBaseline = 'top';
+    ctx.fillText(names[row], 8, row * cell + 6);
+    row++;
+    col = 0;
+    await frame();
+  }
+  aimCamera();
+  return c.toDataURL('image/png');
+}
+
+function orbitCamera(az, cy, vs) {
+  const a = az * Math.PI / 180;
+  const h = vs / 2;
+  camera.left = -h; camera.right = h; camera.top = h; camera.bottom = -h;
+  camera.position.set(6 * Math.sin(a), cy, 6 * Math.cos(a));
+  camera.lookAt(0, cy, 0);
+  camera.updateProjectionMatrix();
+}
+
 let controls = null;
 let turntable = false;
 function initInteractive() {
   document.body.classList.add('interactive');
+  const fit = () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  };
+  fit();
+  window.addEventListener('resize', fit);
   controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(0, 0.85, 0);
   controls.enableDamping = true;
@@ -221,13 +301,23 @@ function initInteractive() {
     for (const p of poses) {
       const b = document.createElement('button');
       b.textContent = p;
-      b.onclick = () => applyPose(char.joints, p);
+      b.onclick = () => { applyPose(char.joints, p); frameCamera(p); };
       sec.appendChild(b);
     }
     ui.appendChild(sec);
   }
 
   const bar = document.getElementById('bar');
+  const charSel = document.createElement('select');
+  for (const c of CHARACTER_ORDER) {
+    const o = document.createElement('option');
+    o.value = c;
+    o.textContent = CHARACTERS[c].label;
+    charSel.appendChild(o);
+  }
+  charSel.value = CHAR_NAME;
+  charSel.onchange = () => { location.search = '?char=' + charSel.value; };
+  bar.appendChild(charSel);
   const mkToggle = (label, fn, initial = false) => {
     const b = document.createElement('button');
     b.textContent = label;
@@ -280,10 +370,43 @@ function animate(t) {
   last = t;
 }
 
-applyPose(char.joints, 'idle_0');
+applyPose(char.joints, 'idle_0', FOOT_POINTS);
+async function beautyShot() {
+  applyPose(char.joints, 'idle_0', FOOT_POINTS);
+  frameCamera();
+  const shots = [];
+  for (const [az, vs, ty] of [[45, 0.62, 1.42], [15, 0.62, 1.42], [45, 1.95, 0.9], [85, 0.62, 1.42]]) {
+    orbitCamera(az, ty, vs);
+    renderer.render(scene, camera);
+    const c = document.createElement('canvas');
+    c.width = OUT_SIZE; c.height = OUT_SIZE;
+    c.getContext('2d').drawImage(renderer.domElement, 0, 0, OUT_SIZE, OUT_SIZE);
+    shots.push(c.toDataURL('image/png'));
+    await frame();
+  }
+  aimCamera();
+  const cell = OUT_SIZE;
+  const sheet = document.createElement('canvas');
+  sheet.width = cell * 4; sheet.height = cell;
+  const ctx = sheet.getContext('2d');
+  ctx.fillStyle = '#23262e';
+  ctx.fillRect(0, 0, sheet.width, sheet.height);
+  for (let i = 0; i < 4; i++) {
+    const img = new Image();
+    await new Promise((r) => { img.onload = r; img.src = shots[i]; });
+    ctx.drawImage(img, i * cell, 0);
+  }
+  return sheet.toDataURL('image/png');
+}
+
 if (HEADLESS) {
   window.__ready = true;
   window.__renderAll = renderAll;
+  window.__debugSheet = debugSheet;
+  window.__beautyShot = beautyShot;
+  window.__applyPosePublic = (name) => applyPose(char.joints, name, FOOT_POINTS);
+  window.__orbitPublic = (az, cy, vs) => orbitCamera(az, cy, vs);
+  window.__renderPublic = () => renderer.render(scene, camera);
 } else {
   initInteractive();
   requestAnimationFrame(animate);

@@ -4,13 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate": "node generate.mjs",
+    "serve": "node server.mjs 8791",
+    "check": "node check.mjs",
+    "debug": "node debug.mjs",
+    "pixelate": "node pixelate.mjs",
+    "all": "node run-all.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "pngjs": "^7.0.0",
     "puppeteer-core": "^25.10.0",
     "three": "^0.186.0"
   }

@@ -1,3 +1,6 @@
+import * as THREE from 'three';
+import { TEEN_FOOT_POINTS } from './model.js';
+
 const D = Math.PI / 180;
 
 export const POSE_ORDER = [
@@ -13,6 +16,29 @@ export const POSE_ORDER = [
   'ko_0', 'ko_1', 'ko_2',
   'victory_0', 'victory_1',
 ];
+
+const AIR_POSES = new Set(['jump_1', 'fall_0', 'ko_1', 'victory_1', 'run_1', 'run_3']);
+export { AIR_POSES };
+
+export const POSE_VIEWS = {
+  victory_0: 90,
+  victory_1: 90,
+};
+
+const DEFAULT_FOOT_POINTS = TEEN_FOOT_POINTS;
+
+function lowestSolePoint(j, footPoints) {
+  let min = Infinity;
+  const v = new THREE.Vector3();
+  for (const ank of [j.ankR, j.ankL]) {
+    for (const p of footPoints) {
+      v.set(p[0], p[1], p[2]);
+      ank.localToWorld(v);
+      min = Math.min(min, v.y);
+    }
+  }
+  return min;
+}
 
 const BASE = {
   root: { x: 0, y: 0, z: 0, turn: 0, tiltBack: 0, sideTilt: 0 },
@@ -31,14 +57,18 @@ const BASE = {
 };
 
 export const POSES = {
-  idle_0: {},
+  idle_0: {
+    hipR: { swing: 9, lift: 2 }, kneeR: { bend: 8 },
+    hipL: { swing: -9 }, kneeL: { bend: 8 },
+  },
 
   idle_1: {
     chest: { lean: 4 },
     head: { nod: 2 },
     shR: { swing: 8 }, elR: { bend: 16 },
     shL: { swing: -10 }, elL: { bend: 16 },
-    hipR: { lift: 2 }, kneeR: { bend: 8 }, kneeL: { bend: 8 },
+    hipR: { swing: 11, lift: 2 }, kneeR: { bend: 10 },
+    hipL: { swing: -7 }, kneeL: { bend: 6 },
     root: { y: -0.008 },
   },
 
@@ -119,7 +149,7 @@ export const POSES = {
     hipL: { swing: 30 }, kneeL: { bend: 42 },
     chest: { lean: -4 },
     head: { nod: -8 },
-    shR: { lift: 155, swing: 15 }, elR: { bend: 12 },
+    shR: { lift: 118, swing: 15 }, elR: { bend: 40 },
     shL: { swing: -25, lift: 20 }, elL: { bend: 30 },
   },
 
@@ -157,15 +187,15 @@ export const POSES = {
     shR: { swing: 92, lift: 4 }, elR: { bend: 2 },
     shL: { swing: -22, lift: 8 }, elL: { bend: 95 },
     hipR: { swing: 26 }, kneeR: { bend: 12 }, ankR: { dorsi: -10 },
-    hipL: { swing: -18 }, kneeL: { bend: 26 },
+    hipL: { swing: -22 }, kneeL: { bend: 20 }, ankL: { dorsi: -22 },
   },
   attack_2: {
     chest: { lean: 10, twist: 26 },
     head: { turn: 8 },
     shL: { swing: 95, lift: 2 }, elL: { bend: 4 },
     shR: { swing: -18, lift: 10 }, elR: { bend: 92 },
-    hipR: { swing: 20 }, kneeR: { bend: 14 },
-    hipL: { swing: -24 }, kneeL: { bend: 20 },
+    hipR: { swing: 20 }, kneeR: { bend: 14 }, ankR: { dorsi: -18 },
+    hipL: { swing: -26 }, kneeL: { bend: 18 }, ankL: { dorsi: -8 },
   },
   attack_3: {
     chest: { lean: -6, twist: 18 },
@@ -189,8 +219,8 @@ export const POSES = {
     head: { nod: 6 },
     shR: { swing: 78, lift: 25 }, elR: { bend: 8 },
     shL: { swing: -35, lift: 10 }, elL: { bend: 30 },
-    hipR: { swing: 32 }, kneeR: { bend: 8 }, ankR: { dorsi: -12 },
-    hipL: { swing: -22 }, kneeL: { bend: 30 },
+    hipR: { swing: 32 }, kneeR: { bend: 8 }, ankR: { dorsi: -6 },
+    hipL: { swing: -24 }, kneeL: { bend: 22 }, ankL: { dorsi: -20 },
   },
   throw_2: {
     chest: { lean: 26, twist: 22 },
@@ -216,7 +246,7 @@ export const POSES = {
     shR: { swing: 45, lift: 20 }, elR: { bend: 115 },
     shL: { swing: 40, lift: 25 }, elL: { bend: 120 },
     hipR: { swing: -8 }, kneeR: { bend: 25 },
-    hipL: { swing: -18 }, kneeL: { bend: 38 },
+    hipL: { swing: -14 }, kneeL: { bend: 25 }, ankL: { dorsi: -18 },
   },
 
   ko_0: {
@@ -238,35 +268,35 @@ export const POSES = {
     hipL: { swing: 28 }, kneeL: { bend: 25 },
   },
   ko_2: {
-    root: { y: 0.14, x: -0.25, tiltBack: 84 },
-    chest: { lean: -12 },
-    head: { nod: -10 },
-    shR: { lift: 150, swing: 5 }, elR: { bend: 15 },
-    shL: { lift: 160, swing: -8 }, elL: { bend: 20 },
-    hipR: { swing: 8 }, kneeR: { bend: 12 },
-    hipL: { swing: 14 }, kneeL: { bend: 18 },
+    root: { y: 0, x: -0.3, tiltBack: 84 },
+    chest: { lean: -14 },
+    head: { nod: -8 },
+    shR: { lift: 138, swing: 8 }, elR: { bend: 20 },
+    shL: { lift: 145, swing: -6 }, elL: { bend: 24 },
+    hipR: { swing: 55 }, kneeR: { bend: 100 }, ankR: { dorsi: 12 },
+    hipL: { swing: 50 }, kneeL: { bend: 92 }, ankL: { dorsi: 8 },
   },
 
   victory_0: {
     chest: { lean: -8 },
     head: { nod: -12 },
-    shR: { lift: 160, swing: 5 }, elR: { bend: 10 },
-    shL: { lift: 155, swing: -5 }, elL: { bend: 12 },
+    shR: { lift: 112, swing: 5 }, elR: { bend: 45 },
+    shL: { lift: 108, swing: -5 }, elL: { bend: 48 },
     hipR: { swing: 6 }, kneeR: { bend: 4 },
     hipL: { swing: 28 }, kneeL: { bend: 55 }, ankL: { dorsi: 10 },
   },
   victory_1: {
     root: { y: 0.38 },
-    hipR: { swing: 30 }, kneeR: { bend: 70 },
-    hipL: { swing: 24 }, kneeL: { bend: 62 },
+    hipR: { swing: 30 }, kneeR: { bend: 85 },
+    hipL: { swing: 24 }, kneeL: { bend: 78 },
     chest: { lean: -6 },
     head: { nod: -10 },
-    shR: { lift: 150, swing: 10 }, elR: { bend: 45 },
-    shL: { lift: 150, swing: -10 }, elL: { bend: 45 },
+    shR: { lift: 125, swing: 10 }, elR: { bend: 65 },
+    shL: { lift: 125, swing: -10 }, elL: { bend: 65 },
   },
 };
 
-export function applyPose(joints, name) {
+export function applyPose(joints, name, footPoints = DEFAULT_FOOT_POINTS) {
   const p = mergePose(name);
   const j = joints;
   const r = p.root;
@@ -290,6 +320,20 @@ export function applyPose(joints, name) {
   j.kneeL.rotation.set(0, 0, -p.kneeL.bend * D);
   j.ankR.rotation.set(0, 0, p.ankR.dorsi * D);
   j.ankL.rotation.set(0, 0, p.ankL.dorsi * D);
+
+  j.root.updateMatrixWorld(true);
+  const minSole = lowestSolePoint(j, footPoints);
+  if (!Number.isFinite(minSole)) return;
+  let shift = 0;
+  if (AIR_POSES.has(name)) {
+    if (minSole < 0) shift = -minSole;
+  } else {
+    shift = -minSole;
+  }
+  if (Math.abs(shift) > 1e-6) {
+    j.root.position.y += shift;
+    j.root.updateMatrixWorld(true);
+  }
 }
 
 function setShoulder(j, s, side) {

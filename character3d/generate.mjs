@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer-core';
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const PORT = 8791;
+const CHAR = process.argv[2] ?? 'teen';
 
 const server = spawn('node', ['server.mjs', String(PORT)], { stdio: ['ignore', 'pipe', 'pipe'] });
 await new Promise((resolve) => {
@@ -29,7 +30,7 @@ try {
   page.on('console', (m) => { if (m.type() === 'error') console.error('[page]', m.text()); });
   page.on('pageerror', (e) => console.error('[pageerror]', e.message));
 
-  await page.goto(`http://127.0.0.1:${PORT}/index.html?headless=1`, { waitUntil: 'networkidle0' });
+  await page.goto(`http://127.0.0.1:${PORT}/index.html?headless=1&char=${CHAR}`, { waitUntil: 'networkidle0' });
   await page.waitForFunction('window.__ready === true', { timeout: 15000 });
 
   const started = Date.now();
