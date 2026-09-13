@@ -23,6 +23,7 @@ export const WEAPON_WORD_COLORS: Record<WeaponId, number> = {
   fryingPan: 0xf07828,
   rubberBoot: 0x48a838,
   rubberDuck: 0xf8d848,
+  hammer: 0xb0b8c8,
 };
 
 export interface HitOptions {
@@ -189,6 +190,11 @@ export class CombatSystem {
   applyHit(target: Player, o: HitOptions): void {
     if (target.isDead) return;
     const now = this.scene.time.now;
+    // Schild: Schaden wird komplett absorbiert (Aura pufft kurz auf)
+    if (now < target.shieldUntil) {
+      this.fx.puffCloud(target.x, target.y - 24);
+      return;
+    }
     const idx = target.idx;
     const dmg = Math.max(0, Math.round(o.damage));
     target.hp = Math.max(0, target.hp - dmg);

@@ -5,6 +5,7 @@ import { EV, GAME_HEIGHT, GAME_WIDTH } from '../types';
 import { Player, safePlayAnim } from '../entities/Player';
 import { InputSystem, PlayerInput } from '../systems/input';
 import { CpuAi } from '../systems/cpuAi';
+import { PowerUpSystem } from '../systems/powerups';
 import { FxSystem } from '../systems/fx';
 import { AudioSystem } from '../systems/audio';
 import { MusicSystem } from '../systems/music';
@@ -44,6 +45,7 @@ export class BattleScene extends Phaser.Scene {
   private players!: [Player, Player];
   private inputSystem!: InputSystem;
   private cpuAi: CpuAi | null = null;
+  private powerups!: PowerUpSystem;
   private fx!: FxSystem;
   private audioS!: AudioSystem;
   private music!: MusicSystem;
@@ -161,6 +163,7 @@ export class BattleScene extends Phaser.Scene {
     this.combat = new CombatSystem(this, this.players, this.fx, this.audioS, this.hud);
     this.weapons = new WeaponSystem(this, this.players, this.platforms, this.fx, this.audioS, this.hud, this.combat);
     this.combat.setWeaponDrop((p) => this.weapons.dropWeapon(p));
+    this.powerups = new PowerUpSystem(this, this.players, this.platforms, this.fx, this.audioS, this.hud);
     if (this.netCfg.mode === 'cpu') {
       this.cpuAi = new CpuAi(this.players[1], this.players[0], {
         groundWeapons: () => this.weapons.groundWeapons,
@@ -233,6 +236,8 @@ export class BattleScene extends Phaser.Scene {
         hp: pl.hp,
         dead: pl.isDead,
         held: pl.heldWeapon,
+        spd: this.time.now < pl.speedBoostUntil,
+        shd: this.time.now < pl.shieldUntil,
       })),
     });
     // Dev/Test-Probe: Waffen-System fuer deterministische E2E-Tests
@@ -240,6 +245,7 @@ export class BattleScene extends Phaser.Scene {
       ws: this.weapons,
       players: this.players,
       cpu: this.cpuAi ? this.cpuAi.debug : null,
+      pu: this.powerups ? this.powerups.debug : [],
       busy: this.players.map((p) => ({
         c: this.combat.isBusy(p),
         w: this.weapons.isBusy(p),
@@ -288,6 +294,7 @@ export class BattleScene extends Phaser.Scene {
       this.separatePlayers();
       this.combat.update();
       this.weapons.update(delta);
+      this.powerups.update(delta);
       this.fx.update(delta);
       this.tickTimer(delta);
     } else if (this.phase === 'countdown') {

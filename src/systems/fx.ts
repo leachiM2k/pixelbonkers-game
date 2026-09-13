@@ -199,7 +199,7 @@ export class FxSystem {
   }
 
   /** Weisser Wolken-Puff (hit_cloud) am Aufprallort, Matrix-Fallback: keiner. */
-  private puffCloud(x: number, y: number): void {
+  puffCloud(x: number, y: number): void {
     if (!this.scene.textures.exists('hit_cloud')) return;
     const img = this.scene.add.image(x, y, 'hit_cloud').setDepth(898).setScale(0.4);
     this.scene.tweens.add({

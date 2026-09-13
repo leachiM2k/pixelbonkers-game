@@ -37,6 +37,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   readonly idx: 0 | 1;
   facing: -1 | 1;
   hp: number;
+  speedBoostUntil = 0;
+  shieldUntil = 0;
   isDead: boolean;
   heldWeapon: WeaponId | null;
   isDucking: boolean;
@@ -77,7 +79,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     else if (input.right && !input.left) this.facing = 1;
     this.setFlipX(this.facing === -1);
     this.isDucking = input.down && onGround;
-    const speed = MOVE_SPEED * (this.isDucking ? DUCK_SPEED_FACTOR : 1);
+    const boost = this.scene.time.now < this.speedBoostUntil ? 1.45 : 1;
+    const speed = MOVE_SPEED * boost * (this.isDucking ? DUCK_SPEED_FACTOR : 1);
     let vx = 0;
     if (input.left) vx -= speed;
     if (input.right) vx += speed;

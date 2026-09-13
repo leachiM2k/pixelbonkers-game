@@ -17,7 +17,8 @@ export type WeaponId =
   | 'toiletBrush'
   | 'fryingPan'
   | 'rubberBoot'
-  | 'rubberDuck';
+  | 'rubberDuck'
+  | 'hammer';
 
 export type WeaponType = 'melee' | 'projectile' | 'trap';
 
@@ -85,6 +86,11 @@ export const WEAPONS: Record<WeaponId, WeaponDefinition> = {
     id: 'rubberDuck', name: 'QUIETSCHENTE', hitWord: 'SQUEAK!',
     damage: 16, knockback: 220, attackSpeed: 0.6, range: 12, cooldown: 0.5,
     type: 'projectile', projectileSpeed: 210, projectileGravity: 600, behavior: 'explosive',
+  },
+  hammer: {
+    id: 'hammer', name: 'VORSDAHD-HAMMA', hitWord: 'WHACK!',
+    damage: 26, knockback: 380, attackSpeed: 1.2, range: 18, cooldown: 1.0,
+    type: 'melee', projectileSpeed: 110, projectileGravity: 900, behavior: 'heavyKnockback',
   },
 };
 
