@@ -20,6 +20,7 @@ import { createPixelText } from '../ui/pixelText';
 import { PLAYER_MAX_HP } from '../entities/Player';
 import { isPngKey } from '../sprites/manifest';
 import { SHEET_SCALE } from '../sprites/sheetScale';
+import { ArenaLayout, arenaForRound } from '../game/arenas';
 
 const GROUND_TOP = 188;
 const ROUND_MS = 60000;
@@ -51,6 +52,8 @@ export class BattleScene extends Phaser.Scene {
   private weapons!: WeaponSystem;
   private pauseMenu!: PauseMenu;
   private platforms!: Phaser.Physics.Arcade.StaticGroup;
+  private arenaIndex = 0;
+  private arena: ArenaLayout = arenaForRound(0);
   private timeLeft = ROUND_MS;
   private lastTimerShown = 60;
   private debugEnabled = false;
@@ -73,8 +76,13 @@ export class BattleScene extends Phaser.Scene {
     super('BattleScene');
   }
 
-  init(data: Partial<NetBattleConfig>): void {
+  init(data: Partial<NetBattleConfig> & { arenaIndex?: number }): void {
     this.netCfg = { mode: data?.mode ?? 'local', roomCode: data?.roomCode };
+    // ?arena=N erzwingt das Layout nur beim ersten Start; ein Runden-Restart
+    // uebergibt arenaIndex in den Daten und hat Vorrang (Rotation).
+    const q = typeof window !== 'undefined' ? window.location.search : '';
+    const forced = q.match(/arena=(\d+)/);
+    this.arenaIndex = data?.arenaIndex ?? (forced ? Number(forced[1]) : 0);
     if (!this.netKeepSession) {
       this.netSession = (data as { session?: NetSession } | undefined)?.session ?? null;
       this.netWired = false;
@@ -138,10 +146,11 @@ export class BattleScene extends Phaser.Scene {
     this.timeLeft = ROUND_MS;
     this.lastTimerShown = 60;
     this.physics.world.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    this.arena = arenaForRound(this.arenaIndex);
     this.buildArena();
     this.players = [
-      new Player(this, 115, GROUND_TOP, 0),
-      new Player(this, 269, GROUND_TOP, 1),
+      new Player(this, this.arena.spawns[0], GROUND_TOP, 0),
+      new Player(this, this.arena.spawns[1], GROUND_TOP, 1),
     ];
     for (const p of this.players) p.setDepth(10);
     this.inputSystem = new InputSystem(this);
@@ -217,6 +226,7 @@ export class BattleScene extends Phaser.Scene {
     // Dev/Test-Probe: Live-State fuer E2E-Tests (read-only)
     (window as unknown as Record<string, unknown>).__PB_STATE = () => ({
       phase: this.phase,
+      arena: this.arena.name,
       cpu: this.netCfg.mode === 'cpu',
       p: this.players.map((pl) => ({
         x: Math.round(pl.x),
@@ -306,31 +316,14 @@ export class BattleScene extends Phaser.Scene {
       .setDepth(0);
     this.platforms = this.physics.add.staticGroup();
     this.addStaticRect(GAME_WIDTH / 2, GROUND_TOP + 14, GAME_WIDTH, 28, PAL_GRASS_HIDDEN, 1, false);
-    this.addPlatform(48, 150, 70);
-    this.addPlatform(336, 150, 70);
-    this.addPlatform(192, 170, 44);
-    this.deco(70, 150, 'arena_house', 1);
+    for (const p of this.arena.platforms) this.addPlatform(p.cx, p.topY, p.w);
+    if (this.arena.house) this.deco(this.arena.house.cx, this.arena.house.topY, 'arena_house', 1);
     this.addCloud(56, 20, 'arena_cloud_0', 9000);
     this.addCloud(190, 34, 'arena_cloud_1', 12000);
     this.addCloud(320, 16, 'arena_cloud_2', 15000);
     this.addBird(30, 16000, false, 0);
     this.addBird(46, 21000, true, 2000);
-    this.deco(26, GROUND_TOP, 'arena_tree');
-    this.deco(358, GROUND_TOP, 'arena_tree');
-    this.deco(80, GROUND_TOP, 'arena_bush');
-    this.deco(300, GROUND_TOP, 'arena_bush');
-    this.deco(140, GROUND_TOP, 'arena_bench');
-    this.deco(216, GROUND_TOP, 'arena_trashcan');
-    this.deco(252, GROUND_TOP, 'arena_lamp');
-    this.deco(118, GROUND_TOP, 'arena_flower_0');
-    this.deco(126, GROUND_TOP, 'arena_flower_1');
-    this.deco(268, GROUND_TOP, 'arena_flower_1');
-    this.deco(276, GROUND_TOP, 'arena_flower_0');
-    this.deco(100, GROUND_TOP, 'arena_grass_0');
-    this.deco(190, GROUND_TOP, 'arena_grass_1');
-    this.deco(280, GROUND_TOP, 'arena_grass_2');
-    this.deco(336, GROUND_TOP, 'arena_grass_0');
-    this.deco(60, GROUND_TOP, 'arena_grass_1');
+    for (const prop of this.arena.props) this.deco(prop.x, GROUND_TOP, prop.key);
     this.scheduleLeaf();
   }
 
@@ -543,7 +536,11 @@ export class BattleScene extends Phaser.Scene {
 
   private restartRound(): void {
     if (this.netCfg.mode === 'host') this.netKeepSession = true;
-    this.scene.restart({ mode: this.netCfg.mode });
+    const rotates = this.netCfg.mode === 'local' || this.netCfg.mode === 'cpu';
+    this.scene.restart({
+      mode: this.netCfg.mode,
+      arenaIndex: rotates ? this.arenaIndex + 1 : this.arenaIndex,
+    });
   }
 
   private setupNet(): void {
