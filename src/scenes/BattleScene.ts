@@ -22,6 +22,7 @@ import { PLAYER_MAX_HP } from '../entities/Player';
 import { isPngKey } from '../sprites/manifest';
 import { SHEET_SCALE } from '../sprites/sheetScale';
 import { ArenaLayout, arenaForRound } from '../game/arenas';
+import { getCharClass } from '../game/characters';
 
 const GROUND_TOP = 188;
 const ROUND_MS = 60000;
@@ -151,8 +152,8 @@ export class BattleScene extends Phaser.Scene {
     this.arena = arenaForRound(this.arenaIndex);
     this.buildArena();
     this.players = [
-      new Player(this, this.arena.spawns[0], GROUND_TOP, 0),
-      new Player(this, this.arena.spawns[1], GROUND_TOP, 1),
+      new Player(this, this.arena.spawns[0], GROUND_TOP, 0, getCharClass(0)),
+      new Player(this, this.arena.spawns[1], GROUND_TOP, 1, getCharClass(1)),
     ];
     for (const p of this.players) p.setDepth(10);
     this.inputSystem = new InputSystem(this);
@@ -238,6 +239,7 @@ export class BattleScene extends Phaser.Scene {
         held: pl.heldWeapon,
         spd: this.time.now < pl.speedBoostUntil,
         shd: this.time.now < pl.shieldUntil,
+        cls: pl.cls.name,
       })),
     });
     // Dev/Test-Probe: Waffen-System fuer deterministische E2E-Tests

@@ -9,6 +9,7 @@ import { OnlineMenu, NetSessionFactoryLike } from '../ui/OnlineMenu';
 import { createNetSessionFactory } from '../ui/netFactory';
 import { isPngKey } from '../sprites/manifest';
 import { SHEET_SCALE } from '../sprites/sheetScale';
+import { getCharClass, getCharSel, setCharSel } from '../game/characters';
 import type { NetBattleConfig, NetSession } from '../net/contract';
 
 // META-Ownership: MainMenuScene. Arcade-Titelbildschirm laut Spezifikation 16/36.
@@ -22,7 +23,7 @@ type ToggleKey = 'sound' | 'music' | 'screenShake' | 'melee';
 interface MenuItem {
   label: () => string;
   run: () => void;
-  status?: () => boolean;
+  status?: () => boolean | string;
 }
 
 export class MainMenuScene extends Phaser.Scene {
@@ -33,7 +34,7 @@ export class MainMenuScene extends Phaser.Scene {
   private footerTexts: Phaser.GameObjects.Container[] = [];
   private pressEnter: Phaser.GameObjects.Container | null = null;
   private selection = 0;
-  private menuMode: 'main' | 'settings' = 'main';
+  private menuMode: 'main' | 'settings' | 'chars' = 'main';
   private coinText: Phaser.GameObjects.Container | null = null;
   private coinTween: Phaser.Tweens.Tween | null = null;
   private showCredits = false;
@@ -86,6 +87,10 @@ export class MainMenuScene extends Phaser.Scene {
       kb.on('keydown-UP', this.onUp, this);
       kb.on('keydown-S', this.onDown, this);
       kb.on('keydown-DOWN', this.onDown, this);
+      kb.on('keydown-A', this.onLeft, this);
+      kb.on('keydown-LEFT', this.onLeft, this);
+      kb.on('keydown-D', this.onRight, this);
+      kb.on('keydown-RIGHT', this.onRight, this);
       kb.on('keydown-ENTER', this.onConfirm, this);
       kb.on('keydown-ESC', this.onEscape, this);
     }
@@ -158,6 +163,7 @@ export class MainMenuScene extends Phaser.Scene {
     return [
       { label: () => 'VS LOCAL', run: () => this.scene.start('BattleScene') },
       { label: () => 'VS CPU', run: () => this.scene.start('BattleScene', { mode: 'cpu' }) },
+      { label: () => 'CHARACTERS', run: () => this.openCharsMenu() },
       { label: () => 'ONLINE', run: () => this.openOnlineMenu() },
       { label: () => 'SETTINGS', run: () => this.openSettings() },
       { label: () => 'CONTROLS', run: () => this.controls.create(this) },
@@ -185,6 +191,27 @@ export class MainMenuScene extends Phaser.Scene {
 
   private buildMenu(): void {
     this.items = this.mainItems();
+    this.renderItems();
+  }
+
+  private openCharsMenu(): void {
+    this.menuMode = 'chars';
+    this.selection = 0;
+    this.items = [
+      {
+        label: () => 'P1 CLASS',
+        status: () => getCharClass(0).name,
+        run: () => setCharSel(0, getCharSel(0) + 1),
+      },
+      {
+        label: () => 'P2 CLASS',
+        status: () => getCharClass(1).name,
+        run: () => setCharSel(1, getCharSel(1) + 1),
+      },
+      { label: () => 'BACK', run: () => this.openMainMenu() },
+    ];
+    this.footerTexts.forEach((t) => t.setVisible(false));
+    this.pressEnter?.setVisible(false);
     this.renderItems();
   }
 
@@ -256,8 +283,8 @@ export class MainMenuScene extends Phaser.Scene {
   private renderItems(): void {
     this.rowObjects.forEach((o) => o.destroy());
     this.rowObjects = [];
-    const step = this.menuMode === 'settings' ? 14 : 11;
-    const baseY = this.menuMode === 'settings' ? 84 : 88;
+    const step = this.menuMode === 'main' ? 11 : 14;
+    const baseY = this.menuMode === 'main' ? 88 : 84;
     const COLOR_BOX_ON = 0x28d84a;
     const COLOR_BOX_ON_EDGE = 0x1a5c1c;
     const COLOR_BOX_OFF = 0xf84838;
@@ -268,8 +295,10 @@ export class MainMenuScene extends Phaser.Scene {
       const selected = i === this.selection;
       const label = item.label();
       const labelW = label.length * 6 - 1;
-      const on = item.status ? item.status() : null;
-      const boxW = on === null ? 0 : on ? 20 : 26;
+      const statusVal = item.status ? item.status() : null;
+      const on = typeof statusVal === 'boolean' ? statusVal : null;
+      const statusText = typeof statusVal === 'string' ? statusVal : null;
+      const boxW = on === null && statusText === null ? 0 : on ? 20 : 26;
       const rowW = boxW > 0 ? 106 : labelW;
 
       if (selected) {
@@ -280,6 +309,16 @@ export class MainMenuScene extends Phaser.Scene {
       }
       const t = createPixelText(this, this.menuX, y, label, { scale: 1, color: COLOR_WHITE });
       this.rowObjects.push(t);
+
+      if (statusText !== null) {
+        this.rowObjects.push(
+          createPixelText(this, this.menuX + 106, y, statusText, {
+            scale: 1,
+            originX: 1,
+            color: COLOR_GOLD,
+          }),
+        );
+      }
 
       if (on !== null) {
         const colRight = this.menuX + 104;
@@ -298,6 +337,20 @@ export class MainMenuScene extends Phaser.Scene {
 
   private openOnlineMenu(): void {
     this.onlineMenu?.create(this, this.startNetBattle);
+  }
+
+  private onLeft(): void {
+    if (this.menuMode !== 'chars' || this.selection > 1) return;
+    this.audio.play('menuSelect');
+    setCharSel(this.selection as 0 | 1, getCharSel(this.selection as 0 | 1) - 1);
+    this.renderItems();
+  }
+
+  private onRight(): void {
+    if (this.menuMode !== 'chars' || this.selection > 1) return;
+    this.audio.play('menuSelect');
+    setCharSel(this.selection as 0 | 1, getCharSel(this.selection as 0 | 1) + 1);
+    this.renderItems();
   }
 
   private onUp(): void {
@@ -322,7 +375,7 @@ export class MainMenuScene extends Phaser.Scene {
 
   private onEscape(): void {
     if (this.controls.isOpen || this.onlineMenu?.isOpen) return;
-    if (this.menuMode === 'settings') {
+    if (this.menuMode === 'settings' || this.menuMode === 'chars') {
       this.audio.play('menuSelect');
       this.openMainMenu();
       return;
@@ -335,6 +388,10 @@ export class MainMenuScene extends Phaser.Scene {
     const kb = this.input.keyboard;
     if (kb) {
       kb.off('keydown-W', this.onUp, this);
+      kb.off('keydown-A', this.onLeft, this);
+      kb.off('keydown-LEFT', this.onLeft, this);
+      kb.off('keydown-D', this.onRight, this);
+      kb.off('keydown-RIGHT', this.onRight, this);
       kb.off('keydown-UP', this.onUp, this);
       kb.off('keydown-S', this.onDown, this);
       kb.off('keydown-DOWN', this.onDown, this);

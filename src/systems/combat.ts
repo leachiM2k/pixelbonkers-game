@@ -217,7 +217,7 @@ export class CombatSystem {
       this.scene.events.emit(EV.ROUND_END, (1 - idx) as 0 | 1);
       return;
     }
-    target.setVelocity(dir * o.knockback, -(120 + o.knockback * 0.25));
+    target.setVelocity(dir * o.knockback * target.cls.kbTaken, -(120 + o.knockback * target.cls.kbTaken * 0.25));
     this.hitstunUntil[idx] = now + HITSTUN_MS;
     safePlayAnim(target, this.prefix(idx) + '_hit', this.prefix(idx) + '_hit');
     this.fx.hitBurst(target.x, target.y - 28, power);

@@ -7,6 +7,8 @@
 
 import Phaser from 'phaser';
 import { WeaponId, PLAYER1_SKIN, PLAYER2_SKIN } from '../types';
+import type { CharClass } from '../game/characters';
+import { CHAR_CLASSES } from '../game/characters';
 import { PlayerInput } from '../systems/input';
 import { isPngKey } from '../sprites/manifest';
 import { SHEET_SCALE } from '../sprites/sheetScale';
@@ -42,13 +44,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   isDead: boolean;
   heldWeapon: WeaponId | null;
   isDucking: boolean;
+  readonly cls: CharClass;
   private readonly prefix: string;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, idx: 0 | 1) {
+  constructor(scene: Phaser.Scene, x: number, y: number, idx: 0 | 1, cls?: CharClass) {
     const skin = idx === 0 ? PLAYER1_SKIN : PLAYER2_SKIN;
     const startTex = skin.prefix + '_idle_0';
     super(scene, x, y, startTex);
     this.idx = idx;
+    this.cls = cls ?? CHAR_CLASSES[0];
     this.prefix = skin.prefix;
     this.facing = idx === 0 ? 1 : -1;
     this.hp = PLAYER_MAX_HP;
@@ -80,13 +84,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setFlipX(this.facing === -1);
     this.isDucking = input.down && onGround;
     const boost = this.scene.time.now < this.speedBoostUntil ? 1.45 : 1;
-    const speed = MOVE_SPEED * boost * (this.isDucking ? DUCK_SPEED_FACTOR : 1);
+    const speed = MOVE_SPEED * this.cls.speed * boost * (this.isDucking ? DUCK_SPEED_FACTOR : 1);
     let vx = 0;
     if (input.left) vx -= speed;
     if (input.right) vx += speed;
     this.setVelocityX(vx);
     if (input.up && onGround && !this.isDucking) {
-      this.setVelocityY(-JUMP_VELOCITY);
+      this.setVelocityY(-JUMP_VELOCITY * this.cls.jump);
     }
     this.applyBodyShape(this.isDucking ? DUCK_BODY_H : PLAYER_BODY_H);
     this.updateVisualState(onGround);
