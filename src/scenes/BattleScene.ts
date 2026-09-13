@@ -5,6 +5,7 @@ import { EV, GAME_HEIGHT, GAME_WIDTH } from '../types';
 import { Player, safePlayAnim } from '../entities/Player';
 import { InputSystem, PlayerInput } from '../systems/input';
 import { CpuAi } from '../systems/cpuAi';
+import { settings } from '../game/settings';
 import { PowerUpSystem } from '../systems/powerups';
 import { FxSystem } from '../systems/fx';
 import { AudioSystem } from '../systems/audio';
@@ -166,12 +167,17 @@ export class BattleScene extends Phaser.Scene {
     this.combat.setWeaponDrop((p) => this.weapons.dropWeapon(p));
     this.powerups = new PowerUpSystem(this, this.players, this.platforms, this.fx, this.audioS, this.hud);
     if (this.netCfg.mode === 'cpu') {
-      this.cpuAi = new CpuAi(this.players[1], this.players[0], {
-        groundWeapons: () => this.weapons.groundWeapons,
-        projectiles: () => this.weapons.activeProjectiles,
-        traps: () => this.weapons.activeTraps,
-        now: () => this.time.now,
-      });
+      this.cpuAi = new CpuAi(
+        this.players[1],
+        this.players[0],
+        {
+          groundWeapons: () => this.weapons.groundWeapons,
+          projectiles: () => this.weapons.activeProjectiles,
+          traps: () => this.weapons.activeTraps,
+          now: () => this.time.now,
+        },
+        settings.cpuLevel,
+      );
     }
     this.physics.add.collider(this.players[0], this.platforms);
     this.physics.add.collider(this.players[1], this.platforms);

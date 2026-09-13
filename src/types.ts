@@ -147,5 +147,13 @@ export interface GameSettings {
   screenShake: boolean;
   /** false = Nahkampfangriffe deaktiviert (nur Werfen) */
   melee: boolean;
+  /** CPU-Schwierigkeit: 0=EASY, 1=MEDIUM, 2=HARD */
+  cpuLevel: 0 | 1 | 2;
 }
-export const DEFAULT_SETTINGS: GameSettings = { sound: true, music: true, screenShake: true, melee: true };
+export const DEFAULT_SETTINGS: GameSettings = {
+  sound: true,
+  music: true,
+  screenShake: true,
+  melee: true,
+  cpuLevel: 1,
+};

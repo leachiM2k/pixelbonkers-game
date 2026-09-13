@@ -23,24 +23,35 @@ export interface CpuDeps {
   now(): number;
 }
 
-const THINK_MS = 150;
-const JITTER_MS = 90;
 const MELEE_RANGE = 24;
-const MELEE_CD = 620;
 const ALIGN_DY = 32;
 const THROW_MIN = 20;
 const THROW_MAX = 100;
-const THROW_CD = 900;
 const APPROACH_TO = 78;
 const KEEP_AWAY = 34;
 const PICKUP_DX = 15;
 const PICKUP_DY = 42;
-const DODGE_LOOK = 150;
 const DODGE_JUMP = 46;
 const TRAP_AHEAD = 26;
 const EDGE = 16;
 const JUMP_CD = 450;
 const SEEK_ABOVE = 44;
+
+// Schwierigkeitsstufen (Settings: cpuLevel 0/1/2)
+export interface CpuDifficulty {
+  thinkMs: number;
+  jitterMs: number;
+  meleeCd: number;
+  throwCd: number;
+  dodgeLook: number;
+  dazeChance: number;
+}
+
+const DIFFICULTIES: CpuDifficulty[] = [
+  { thinkMs: 300, jitterMs: 200, meleeCd: 950, throwCd: 1400, dodgeLook: 90, dazeChance: 0.25 },
+  { thinkMs: 150, jitterMs: 90, meleeCd: 620, throwCd: 900, dodgeLook: 150, dazeChance: 0 },
+  { thinkMs: 100, jitterMs: 45, meleeCd: 430, throwCd: 600, dodgeLook: 210, dazeChance: 0 },
+];
 
 export class CpuAi {
   private readonly me: Player;
@@ -52,10 +63,13 @@ export class CpuAi {
   private throwReadyAt = 0;
   private jumpReadyAt = 0;
 
-  constructor(me: Player, foe: Player, deps: CpuDeps) {
+  private readonly diff: CpuDifficulty;
+
+  constructor(me: Player, foe: Player, deps: CpuDeps, level: 0 | 1 | 2 = 1) {
     this.me = me;
     this.foe = foe;
     this.deps = deps;
+    this.diff = DIFFICULTIES[level] ?? DIFFICULTIES[1];
   }
 
   getInput(): PlayerInput {
@@ -67,6 +81,7 @@ export class CpuAi {
     const dx = this.foe.x - this.me.x;
     return {
       thinkRem: Math.round(this.thinkRem),
+      lvl: ['EASY', 'MEDIUM', 'HARD'][DIFFICULTIES.indexOf(this.diff)],
       left: this.state.left,
       right: this.state.right,
       up: this.state.up,
@@ -91,7 +106,13 @@ export class CpuAi {
 
     this.thinkRem -= delta;
     if (this.thinkRem > 0) return;
-    this.thinkRem = THINK_MS + Math.random() * JITTER_MS;
+    this.thinkRem = this.diff.thinkMs + Math.random() * this.diff.jitterMs;
+    // EASY: gelegentlich eine Entscheidung 'verpassen' (Stehenbleiben)
+    if (Math.random() < this.diff.dazeChance) {
+      this.state.left = false;
+      this.state.right = false;
+      return;
+    }
     this.decide(this.deps.now());
   }
 
@@ -111,7 +132,7 @@ export class CpuAi {
     for (const pr of this.deps.projectiles()) {
       const vx = pr.arcadeBody.velocity.x;
       const toward = (pr.x - myX) * vx < 0;
-      const near = Math.abs(pr.x - myX) < DODGE_LOOK && Math.abs(pr.y - myY) < 46;
+      const near = Math.abs(pr.x - myX) < this.diff.dodgeLook && Math.abs(pr.y - myY) < 46;
       if (toward && near) {
         const away = pr.x >= myX ? -1 : 1;
         if (Math.abs(pr.x - myX) < DODGE_JUMP) st.up = true; // zu knapp: springen
@@ -134,7 +155,7 @@ export class CpuAi {
     // 3) Nahkampf
     if (dist < MELEE_RANGE && Math.abs(dy) < 30 && now >= this.meleeReadyAt) {
       st.meleePressed = true;
-      this.meleeReadyAt = now + MELEE_CD;
+      this.meleeReadyAt = now + this.diff.meleeCd;
       return;
     }
 
@@ -143,7 +164,7 @@ export class CpuAi {
     if (this.me.heldWeapon) {
       if (Math.abs(dy) < ALIGN_DY && dist > THROW_MIN && dist < THROW_MAX && now >= this.throwReadyAt) {
         st.weaponPressed = true;
-        this.throwReadyAt = now + THROW_CD;
+        this.throwReadyAt = now + this.diff.throwCd;
         return;
       }
       if (dist > APPROACH_TO) {

@@ -185,6 +185,15 @@ export class MainMenuScene extends Phaser.Scene {
         run: () => this.scale.toggleFullscreen(),
       },
       { label: () => 'KICK', status: () => settings.melee, run: () => this.toggle('melee') },
+      {
+        label: () => 'CPU LEVEL',
+        status: () => ['EASY', 'MEDIUM', 'HARD'][settings.cpuLevel],
+        run: () => {
+          settings.cpuLevel = ((settings.cpuLevel + 1) % 3) as 0 | 1 | 2;
+          saveSettings(settings);
+          this.renderItems();
+        },
+      },
       { label: () => 'BACK', run: () => this.openMainMenu() },
     ];
   }
