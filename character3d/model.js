@@ -13,7 +13,7 @@ export const TEEN_CONFIG = {
     shirt: 0x2e6fd8, shirtDark: 0x24549f,
     jeans: 0x3f567f, jeansCuff: 0x55708f,
     shoe: 0x3faa4d, shoeDark: 0x2e8039, sole: 0xe9e9e9,
-    eyeWhite: 0xf8f8f8, eyeDark: 0x2a1e14, mouth: 0xb06a55,
+    eyeWhite: 0xf8f8f8, eyeDark: 0x1a1620, mouth: 0x8a4a3c,
   },
   build: {
     hipsY: 0.86,
@@ -38,7 +38,7 @@ export const BRUNO_CONFIG = {
     shirt: RED, shirtDark: RED_D,
     jeans: OBLUE, jeansCuff: OBLUE_D,
     shoe: BROWN, shoeDark: BROWN_D, sole: 0xd9c9a8,
-    eyeWhite: 0xf8f8f8, eyeDark: 0x241a10, mouth: 0xa5644f,
+    eyeWhite: 0xf8f8f8, eyeDark: 0x1a1620, mouth: 0x8a4a3c,
   },
   build: {
     hipsY: 0.60,
@@ -69,7 +69,7 @@ export const LINO_CONFIG = {
     shirt: GREEN, shirtDark: GREEN_D,
     jeans: 0x27356e, jeansCuff: 0x354687,
     shoe: BROWN, shoeDark: BROWN_D, sole: 0xd9c9a8,
-    eyeWhite: 0xf8f8f8, eyeDark: 0x241a10, mouth: 0xa5644f,
+    eyeWhite: 0xf8f8f8, eyeDark: 0x1a1620, mouth: 0x8a4a3c,
   },
   build: {
     hipsY: 0.80,
@@ -100,7 +100,7 @@ export const POLDI_CONFIG = {
     shirt: NAVY, shirtDark: NAVY_D,
     jeans: 0x4a6ea8, jeansCuff: 0x5d82bd,
     shoe: BROWN, shoeDark: BROWN_D, sole: 0xd9c9a8,
-    eyeWhite: 0xf8f8f8, eyeDark: 0x241a10, mouth: 0xa5644f,
+    eyeWhite: 0xf8f8f8, eyeDark: 0x1a1620, mouth: 0x8a4a3c,
   },
   build: {
     hipsY: 0.66,
@@ -123,22 +123,22 @@ export const POLDI_CONFIG = {
   },
 };
 
-// ---- PIXEL BONKERS Klassen-Figuren (P1 dunkelblau/rot, P2 hellblau/grün) ----
+// ---- PIXEL BONKERS Klassen-Figuren (Chibi-Proportionen wie die Boys, P1 dunkelblau/rot, P2 hellblau/grün) ----
 
 const SPD_BASE = {
   standPx: 92,
   build: {
-    hipsY: 0.88,
-    pelvisR: 0.095,
-    torsoR: 0.105, torsoLen: 0.15, torsoSX: 0.88, torsoSZ: 1.18,
-    chestLift: 0.32, neckR: 0.03,
-    headR: 0.096, headSX: 0.9, headSY: 1.08, headSZ: 0.94,
-    shoulderW: 0.15, armR: 0.029, upperArmLen: 0.20,
-    foreR: 0.023, foreLen: 0.185, handR: 0.038,
-    hipW: 0.078, thighR: 0.044, thighLen: 0.30,
-    shinR: 0.033, shinLen: 0.275,
-    noseR: 0.016, earR: 0.017, eyeR: 0.02, eyeSide: 0.032, browY: 0.044,
-    footToeX: 0.155, footHeelX: -0.092, footSoleY: -0.084, footW: 0.084,
+    hipsY: 0.62,
+    pelvisR: 0.108,
+    torsoR: 0.118, torsoLen: 0.125, torsoSX: 0.9, torsoSZ: 1.2,
+    chestLift: 0.26, neckR: 0.032,
+    headR: 0.19, headSX: 1.02, headSY: 0.98, headSZ: 1.0,
+    shoulderW: 0.148, armR: 0.032, upperArmLen: 0.145,
+    foreR: 0.026, foreLen: 0.135, handR: 0.044,
+    hipW: 0.082, thighR: 0.05, thighLen: 0.13,
+    shinR: 0.037, shinLen: 0.12,
+    noseR: 0.026, earR: 0.02, eyeR: 0.036, eyeSide: 0.046, browY: 0.044, eyeWX: 0.82, pupilK: 0.68, browT: 0.016, browH: 0.012, browL: 0.05, mouthT: 0.014, mouthH: 0.022, mouthW: 0.06,
+    footToeX: 0.17, footHeelX: -0.098, footSoleY: -0.084, footW: 0.092,
   },
   features: { hairStyle: 'fringe', headband: { color: RED, dark: RED_D }, cap: null, sailorCap: null, mustache: null, overalls: null, chin: false, boots: false },
 };
@@ -147,10 +147,10 @@ export const SPD1_CONFIG = {
   ...SPD_BASE,
   colors: {
     skin: 0xeeb98f, hair: 0x2f2014,
-    shirt: 0x24509e, shirtDark: 0x1b3c7a,
+    shirt: 0x2b62c8, shirtDark: 0x1f4a9e,
     jeans: 0x3f567f, jeansCuff: 0x55708f,
     shoe: RED, shoeDark: RED_D, sole: 0xe9e9e9,
-    eyeWhite: 0xf8f8f8, eyeDark: 0x2a1e14, mouth: 0xb06a55,
+    eyeWhite: 0xf8f8f8, eyeDark: 0x1a1620, mouth: 0x8a4a3c,
   },
 };
 
@@ -158,27 +158,27 @@ export const SPD2_CONFIG = {
   ...SPD_BASE,
   colors: {
     skin: 0xf0bb90, hair: 0x51341e,
-    shirt: 0x62a8e8, shirtDark: 0x4a8ac8,
+    shirt: 0x58b4ec, shirtDark: 0x3f95c8,
     jeans: 0x3f567f, jeansCuff: 0x55708f,
     shoe: GREEN, shoeDark: GREEN_D, sole: 0xe9e9e9,
-    eyeWhite: 0xf8f8f8, eyeDark: 0x2a1e14, mouth: 0xb06a55,
+    eyeWhite: 0xf8f8f8, eyeDark: 0x1a1620, mouth: 0x8a4a3c,
   },
 };
 
 const TNK_BASE = {
   standPx: 84,
   build: {
-    hipsY: 0.68,
-    pelvisR: 0.13,
-    torsoR: 0.135, torsoLen: 0.155, torsoSX: 1.16, torsoSZ: 1.3,
-    chestLift: 0.24, neckR: 0.038,
-    headR: 0.098, headSX: 0.98, headSY: 1.0, headSZ: 0.98,
-    shoulderW: 0.19, armR: 0.05, upperArmLen: 0.165,
-    foreR: 0.046, foreLen: 0.15, handR: 0.055,
-    hipW: 0.095, thighR: 0.06, thighLen: 0.21,
-    shinR: 0.05, shinLen: 0.185,
-    noseR: 0.024, earR: 0.017, eyeR: 0.017, eyeSide: 0.035, browY: 0.038,
-    footToeX: 0.16, footHeelX: -0.095, footSoleY: -0.084, footW: 0.1,
+    hipsY: 0.54,
+    pelvisR: 0.138,
+    torsoR: 0.142, torsoLen: 0.12, torsoSX: 1.18, torsoSZ: 1.32,
+    chestLift: 0.23, neckR: 0.04,
+    headR: 0.145, headSX: 1.0, headSY: 1.0, headSZ: 1.0,
+    shoulderW: 0.185, armR: 0.05, upperArmLen: 0.13,
+    foreR: 0.048, foreLen: 0.12, handR: 0.055,
+    hipW: 0.096, thighR: 0.064, thighLen: 0.125,
+    shinR: 0.054, shinLen: 0.115,
+    noseR: 0.034, earR: 0.02, eyeR: 0.032, eyeSide: 0.05, browY: 0.038, eyeWX: 0.82, pupilK: 0.68, browT: 0.018, browH: 0.013, browL: 0.055, mouthT: 0.012, mouthH: 0.018, mouthW: 0.056,
+    footToeX: 0.175, footHeelX: -0.1, footSoleY: -0.084, footW: 0.105,
   },
   features: { hairStyle: 'baldSide', chin: true, boots: true, headband: null, cap: null, sailorCap: null, mustache: null, overalls: null },
 };
@@ -190,7 +190,7 @@ export const TNK1_CONFIG = {
     shirt: NAVY, shirtDark: NAVY_D,
     jeans: 0x3f567f, jeansCuff: 0x55708f,
     shoe: RED, shoeDark: RED_D, sole: 0xd9c9a8,
-    eyeWhite: 0xf8f8f8, eyeDark: 0x241a10, mouth: 0xa5644f,
+    eyeWhite: 0xf8f8f8, eyeDark: 0x1a1620, mouth: 0x8a4a3c,
   },
 };
 
@@ -201,24 +201,24 @@ export const TNK2_CONFIG = {
     shirt: 0x5fa8d8, shirtDark: 0x4a86b8,
     jeans: 0x3f567f, jeansCuff: 0x55708f,
     shoe: GREEN, shoeDark: GREEN_D, sole: 0xd9c9a8,
-    eyeWhite: 0xf8f8f8, eyeDark: 0x241a10, mouth: 0xa5644f,
+    eyeWhite: 0xf8f8f8, eyeDark: 0x1a1620, mouth: 0x8a4a3c,
   },
 };
 
 const JMP_BASE = {
   standPx: 96,
   build: {
-    hipsY: 0.98,
-    pelvisR: 0.09,
-    torsoR: 0.10, torsoLen: 0.17, torsoSX: 0.85, torsoSZ: 1.12,
-    chestLift: 0.34, neckR: 0.028,
-    headR: 0.094, headSX: 0.88, headSY: 1.14, headSZ: 0.9,
-    shoulderW: 0.142, armR: 0.027, upperArmLen: 0.205,
-    foreR: 0.022, foreLen: 0.19, handR: 0.036,
-    hipW: 0.074, thighR: 0.042, thighLen: 0.32,
-    shinR: 0.031, shinLen: 0.30,
-    noseR: 0.017, earR: 0.016, eyeR: 0.019, eyeSide: 0.031, browY: 0.046,
-    footToeX: 0.15, footHeelX: -0.09, footSoleY: -0.084, footW: 0.08,
+    hipsY: 0.66,
+    pelvisR: 0.102,
+    torsoR: 0.11, torsoLen: 0.135, torsoSX: 0.88, torsoSZ: 1.16,
+    chestLift: 0.27, neckR: 0.03,
+    headR: 0.185, headSX: 1.0, headSY: 1.0, headSZ: 0.96,
+    shoulderW: 0.14, armR: 0.029, upperArmLen: 0.155,
+    foreR: 0.024, foreLen: 0.145, handR: 0.042,
+    hipW: 0.078, thighR: 0.046, thighLen: 0.145,
+    shinR: 0.034, shinLen: 0.135,
+    noseR: 0.026, earR: 0.02, eyeR: 0.034, eyeSide: 0.045, browY: 0.046, eyeWX: 0.82, pupilK: 0.68, browT: 0.016, browH: 0.012, browL: 0.05, mouthT: 0.014, mouthH: 0.022, mouthW: 0.06,
+    footToeX: 0.165, footHeelX: -0.095, footSoleY: -0.084, footW: 0.088,
   },
   features: { hairStyle: 'fringe', goggles: { band: RED, lens: 0x9fe8ff, rim: 0x1a1a26 }, headband: null, cap: null, sailorCap: null, mustache: null, overalls: null, chin: false, boots: false },
 };
@@ -230,7 +230,7 @@ export const JMP1_CONFIG = {
     shirt: NAVY, shirtDark: NAVY_D,
     jeans: 0x3f567f, jeansCuff: 0x55708f,
     shoe: RED, shoeDark: RED_D, sole: 0xe9e9e9,
-    eyeWhite: 0xf8f8f8, eyeDark: 0x2a1e14, mouth: 0xb06a55,
+    eyeWhite: 0xf8f8f8, eyeDark: 0x1a1620, mouth: 0x8a4a3c,
   },
 };
 
@@ -238,10 +238,10 @@ export const JMP2_CONFIG = {
   ...JMP_BASE,
   colors: {
     skin: 0xf0bb90, hair: 0x6b4a22,
-    shirt: 0x62b0e0, shirtDark: 0x4a90c0,
+    shirt: 0x58b4ec, shirtDark: 0x3f95c8,
     jeans: 0x3f567f, jeansCuff: 0x55708f,
     shoe: GREEN, shoeDark: GREEN_D, sole: 0xe9e9e9,
-    eyeWhite: 0xf8f8f8, eyeDark: 0x2a1e14, mouth: 0xb06a55,
+    eyeWhite: 0xf8f8f8, eyeDark: 0x1a1620, mouth: 0x8a4a3c,
   },
 };
 
@@ -368,12 +368,18 @@ function buildHead(head, b, F, M) {
   head.add(mesh(sphere(b.earR * s), M.skin, 0.005 * s, cy, -0.094 * s, { scale: [0.55, 1, 0.8], noOutline: true }));
 
   for (const side of [1, -1]) {
-    head.add(mesh(sphere(b.eyeR * s), M.eyeWhite, fx, cy + 0.006 * s, side * b.eyeSide * s, { scale: [0.55, 1, 0.92], noOutline: true }));
-    head.add(mesh(sphere(b.eyeR * 0.44 * s), M.eyeDark, fx + 0.009 * s, cy + 0.006 * s, side * b.eyeSide * s, { scale: [0.5, 1, 1], noOutline: true }));
-    head.add(mesh(box(0.012 * s, 0.0075 * s, 0.037 * s), M.hair, 0.084 * s, cy + b.browY * s, side * b.eyeSide * s, { rot: [0, side * 0.28, -side * 0.12], noOutline: true }));
+    const ew = b.eyeWX ?? 0.55;
+    head.add(mesh(sphere(b.eyeR * s), M.eyeWhite, fx, cy + 0.006 * s, side * b.eyeSide * s, { scale: [ew, 1, 0.92], noOutline: true }));
+    head.add(mesh(sphere(b.eyeR * (b.pupilK ?? 0.44) * s), M.eyeDark, fx + 0.009 * s, cy + 0.006 * s, side * b.eyeSide * s, { scale: [0.5, 1, 1], noOutline: true }));
+    head.add(mesh(box((b.browT ?? 0.012) * s, (b.browH ?? 0.0075) * s, (b.browL ?? 0.037) * s), M.hair, 0.084 * s, cy + b.browY * s, side * b.eyeSide * s, { rot: [0, side * 0.28, -side * 0.12], noOutline: true }));
   }
-  head.add(mesh(sphere(b.noseR * s), M.skin, (fx + 0.009) * s, cy - 0.018 * s, 0, { scale: [0.7, 0.85, 0.8] }));
-  head.add(mesh(box(0.007 * s, 0.011 * s, 0.032 * s), M.mouth, 0.082 * s, cy - 0.056 * s, 0, { rot: [0, 0.05, 0], noOutline: true }));
+  const surfX = (dy) => b.headR * b.headSX * Math.sqrt(Math.max(0.01, 1 - (dy * dy) / (b.headR * b.headSY) ** 2));
+  const dyN = -0.018 * s;
+  const nr = b.noseR * s;
+  head.add(mesh(sphere(nr), M.skin, surfX(dyN) + nr * 0.21, cy + dyN, 0, { scale: [0.7, 0.85, 0.8] }));
+  const dyM = -0.056 * s;
+  const mt = (b.mouthT ?? 0.007) * s;
+  head.add(mesh(box(mt, (b.mouthH ?? 0.011) * s, (b.mouthW ?? 0.032) * s), M.mouth, surfX(dyM) + mt * 0.35, cy + dyM, 0, { rot: [0, 0.05, 0], noOutline: true }));
 
   if (F.chin) {
     head.add(mesh(sphere(0.036 * s), M.skin, (fx - 0.012) * s, cy - 0.078 * s, 0, { scale: [0.9, 0.72, 0.85] }));

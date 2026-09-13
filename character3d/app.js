@@ -70,14 +70,19 @@ const char = buildCharacter(CHAR_CONFIG);
 scene.add(char.root);
 
 let outlines = [];
+const OUTLINE_GAP = 0.016;
+const _ws = new THREE.Vector3();
 function buildOutlines() {
   for (const o of outlines) o.parent?.remove(o);
   outlines = [];
   char.root.traverse((o) => {
     if (!o.isMesh || o.userData.noOutline) return;
     const ol = new THREE.Mesh(o.geometry, outlineMat);
-    const s = o.scale.clone().multiplyScalar(1.055);
-    ol.scale.copy(s);
+    const bs = o.geometry.boundingSphere ?? (o.geometry.computeBoundingSphere(), o.geometry.boundingSphere);
+    o.getWorldScale(_ws);
+    const r = bs.radius * Math.max(_ws.x, _ws.y, _ws.z);
+    const k = r > 1e-6 ? (r + OUTLINE_GAP) / r : 1.06;
+    ol.scale.copy(o.scale).multiplyScalar(k);
     ol.position.copy(o.position).addScaledVector(o.getWorldScale(new THREE.Vector3()), 0);
     ol.rotation.copy(o.rotation);
     ol.userData.isOutline = true;
@@ -86,7 +91,7 @@ function buildOutlines() {
     outlines.push(ol);
   });
 }
-const outlineMat = new THREE.MeshBasicMaterial({ color: 0x241a20, side: THREE.BackSide });
+const outlineMat = new THREE.MeshBasicMaterial({ color: 0x101018, side: THREE.BackSide });
 let showOutlines = false;
 buildOutlines();
 
@@ -100,7 +105,7 @@ function makeToonMaterials() {
   gradient.needsUpdate = true;
   const map = new Map();
   for (const m of Object.values(char.materials)) {
-    map.set(m, new THREE.MeshToonMaterial({ color: m.color.clone(), gradientMap: gradient }));
+    if (m) map.set(m, new THREE.MeshToonMaterial({ color: m.color.clone(), gradientMap: gradient }));
   }
   return map;
 }
@@ -131,12 +136,34 @@ async function postSave(name, data) {
   if (!res.ok) throw new Error('save failed: ' + name);
 }
 
+let flatMats = null;
+function setFlatRender(on) {
+  if (on && !flatMats) {
+    flatMats = new Map();
+    for (const m of Object.values(char.materials)) {
+      if (m) flatMats.set(m, new THREE.MeshBasicMaterial({ color: m.color.clone() }));
+    }
+  }
+  char.root.traverse((o) => {
+    if (!o.isMesh || o.userData.isOutline) return;
+    if (on) {
+      if (!o.userData.flatSavedMat) o.userData.flatSavedMat = o.material;
+      o.material = flatMats.get(o.userData.flatSavedMat) ?? o.userData.flatSavedMat;
+    } else if (o.userData.flatSavedMat) {
+      o.material = o.userData.flatSavedMat;
+    }
+  });
+  outlineVisibility(on);
+  renderer.toneMapping = on ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+}
+
 async function renderAll() {
   const shots = [];
   const meta = { standingHeightM: 0, poses: {} };
   applyPose(char.joints, 'idle_0', FOOT_POINTS);
   char.root.updateMatrixWorld(true);
   meta.standingHeightM = new THREE.Box3().setFromObject(char.root).getSize(new THREE.Vector3()).y;
+  setFlatRender(true);
   for (const name of POSE_ORDER) {
     applyPose(char.joints, name, FOOT_POINTS);
     meta.poses[name] = frameCamera(name);
@@ -145,6 +172,7 @@ async function renderAll() {
     await postSave(`${PREFIX}_${name}.png`, url);
     await frame();
   }
+  setFlatRender(false);
   await postSave(`${PREFIX}_meta.json`, JSON.stringify(meta));
   const sheetUrl = await buildSheet(shots);
   await postSave(`${PREFIX}_preview_sheet.png`, sheetUrl);

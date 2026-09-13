@@ -27,8 +27,9 @@ function dist2(a, b) {
 
 function extractPalette() {
   const freq = new Map();
+  const SKIP = /^(spd1|spd2|tnk1|tnk2|jmp1|jmp2)_/;
   for (const f of readdirSync(SPRITE_DIR)) {
-    if (!f.endsWith('.png')) continue;
+    if (!f.endsWith('.png') || SKIP.test(f)) continue;
     const png = PNG.sync.read(readFileSync(join(SPRITE_DIR, f)));
     for (let i = 0; i < png.width * png.height; i++) {
       const a = png.data[i * 4 + 3];
@@ -139,6 +140,32 @@ function convertPose(name, img, meta, pal, ppmSprite) {
         px[j] = oc[0]; px[j + 1] = oc[1]; px[j + 2] = oc[2];
       }
     }
+  }
+
+  // Regionskonturen: helle Seite jeder Farbgrenze abdunkeln (Comic-Linie zwischen allen Flaechen)
+  const CONTOUR_T = 1800;
+  const marked = new Uint8Array(CANVAS_W * CANVAS_H);
+  for (let row = 0; row < CANVAS_H; row++) {
+    for (let col = 0; col < CANVAS_W; col++) {
+      const i = row * CANVAS_W + col;
+      if (!opaque[i]) continue;
+      const j = i * 4;
+      const self = [px[j], px[j + 1], px[j + 2]];
+      for (const n of [i - 1, i + 1, i - CANVAS_W, i + CANVAS_W]) {
+        if (n < 0 || n >= CANVAS_W * CANVAS_H || !opaque[n] || marked[n]) continue;
+        const k = n * 4;
+        if (dist2(self, [px[k], px[k + 1], px[k + 2]]) > CONTOUR_T
+          && luma([px[k], px[k + 1], px[k + 2]]) < luma(self)) {
+          marked[i] = 1;
+          break;
+        }
+      }
+    }
+  }
+  for (let i = 0; i < marked.length; i++) {
+    if (!marked[i]) continue;
+    const j = i * 4;
+    px[j] = oc[0]; px[j + 1] = oc[1]; px[j + 2] = oc[2];
   }
 
   const png = new PNG({ width: CANVAS_W, height: CANVAS_H });
