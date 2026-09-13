@@ -146,8 +146,7 @@ export class WeaponSystem {
     this.audio.play('throw');
     this.scene.events.emit(EV.WEAPON_THROW, player.idx, id);
     this.throwBusyUntil[player.idx] = this.scene.time.now + THROW_ANIM_MS;
-    const prefix = player.idx === 0 ? 'boy1' : 'boy2';
-    safePlayAnim(player, prefix + '_throw', prefix + '_throw');
+    safePlayAnim(player, player.prefix + '_throw', player.prefix + '_throw');
     const def = WEAPONS[id];
     const proj = new Projectile(
       this.scene,

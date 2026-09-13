@@ -224,7 +224,7 @@ export class GuestView {
   }
 
   private applyAnim(p: Player, anim: NetAnim): void {
-    const prefix = p.idx === 0 ? 'boy1' : 'boy2';
+    const prefix = p.prefix;
     switch (anim) {
       case 'idle':
         safePlayAnim(p, prefix + '_idle', prefix + '_idle');

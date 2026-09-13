@@ -254,6 +254,6 @@ export class CombatSystem {
   }
 
   private prefix(idx: 0 | 1): string {
-    return idx === 0 ? 'boy1' : 'boy2';
+    return this.players[idx].prefix;
   }
 }

@@ -23,7 +23,7 @@ import { PLAYER_MAX_HP } from '../entities/Player';
 import { isPngKey } from '../sprites/manifest';
 import { SHEET_SCALE } from '../sprites/sheetScale';
 import { ArenaLayout, arenaForRound } from '../game/arenas';
-import { getCharClass, classRingColor } from '../game/characters';
+import { getCharClass } from '../game/characters';
 
 const GROUND_TOP = 188;
 const ROUND_MS = 60000;
@@ -48,7 +48,6 @@ export class BattleScene extends Phaser.Scene {
   private inputSystem!: InputSystem;
   private cpuAi: CpuAi | null = null;
   private powerups!: PowerUpSystem;
-  private classRings: Phaser.GameObjects.Ellipse[] = [];
   private fx!: FxSystem;
   private audioS!: AudioSystem;
   private music!: MusicSystem;
@@ -158,13 +157,6 @@ export class BattleScene extends Phaser.Scene {
       new Player(this, this.arena.spawns[1], GROUND_TOP, 1, getCharClass(1)),
     ];
     for (const p of this.players) p.setDepth(10);
-    // Klassen-Ring am Boden: sichtbare Unterscheidung der Charakterklassen
-    this.classRings = this.players.map((p, i) =>
-      this.add
-        .ellipse(this.arena.spawns[i], GROUND_TOP + 1, 30, 9)
-        .setStrokeStyle(1, classRingColor(p.cls.name), 1)
-        .setDepth(9),
-    );
     this.inputSystem = new InputSystem(this);
     this.fx = new FxSystem(this);
     this.audioS = new AudioSystem(this);
@@ -294,9 +286,6 @@ export class BattleScene extends Phaser.Scene {
       this.netDebugUpdate();
       if (this.debugEnabled) this.drawDebug();
       return;
-    }
-    for (let i = 0; i < this.players.length; i++) {
-      this.classRings[i]?.setPosition(this.players[i].x, this.players[i].y + 1);
     }
     if (this.phase === 'fight') {
       this.cpuAi?.update(delta);
@@ -724,7 +713,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private prefix(idx: 0 | 1): string {
-    return idx === 0 ? 'boy1' : 'boy2';
+    return this.players[idx].prefix;
   }
 
   private toggleDebug(): void {

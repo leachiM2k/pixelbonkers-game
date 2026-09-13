@@ -38,22 +38,23 @@ export function getCharClass(idx: 0 | 1): CharClass {
   return CHAR_CLASSES[sel[idx]] ?? CHAR_CLASSES[0];
 }
 
-export function getCharSel(idx: 0 | 1): number {
-  return sel[idx];
+/** Textur-Praefix der Klasse je Spieler (ALLROUNDER = klassische Boys) */
+export function classSkinPrefix(clsName: string, playerIdx: 0 | 1): string {
+  const variant = playerIdx === 0 ? '1' : '2';
+  switch (clsName) {
+    case 'SPEEDY':
+      return 'spd' + variant;
+    case 'TANK':
+      return 'tnk' + variant;
+    case 'JUMPER':
+      return 'jmp' + variant;
+    default:
+      return 'boy' + variant;
+  }
 }
 
-/** Klassen-Ring-Farbe fuer die sichtbare Unterscheidung im Kampf */
-export function classRingColor(name: string): number {
-  switch (name) {
-    case 'SPEEDY':
-      return 0xf8d848; // Gold
-    case 'TANK':
-      return 0xe04848; // Rot
-    case 'JUMPER':
-      return 0x7dd3fc; // Cyan
-    default:
-      return 0xf2f0e5; // Weiss (ALLROUNDER)
-  }
+export function getCharSel(idx: 0 | 1): number {
+  return sel[idx];
 }
 
 export function setCharSel(idx: 0 | 1, i: number): void {

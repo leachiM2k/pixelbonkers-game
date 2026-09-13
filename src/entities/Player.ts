@@ -6,9 +6,9 @@
 // unabhaengig von setScale. Body bleibt immer fuss- und mittenzentriert ausgerichtet.
 
 import Phaser from 'phaser';
-import { WeaponId, PLAYER1_SKIN, PLAYER2_SKIN } from '../types';
+import { WeaponId } from '../types';
 import type { CharClass } from '../game/characters';
-import { CHAR_CLASSES } from '../game/characters';
+import { CHAR_CLASSES, classSkinPrefix } from '../game/characters';
 import { PlayerInput } from '../systems/input';
 import { isPngKey } from '../sprites/manifest';
 import { SHEET_SCALE } from '../sprites/sheetScale';
@@ -45,15 +45,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   heldWeapon: WeaponId | null;
   isDucking: boolean;
   readonly cls: CharClass;
-  private readonly prefix: string;
+  readonly prefix: string;
 
   constructor(scene: Phaser.Scene, x: number, y: number, idx: 0 | 1, cls?: CharClass) {
-    const skin = idx === 0 ? PLAYER1_SKIN : PLAYER2_SKIN;
-    const startTex = skin.prefix + '_idle_0';
-    super(scene, x, y, startTex);
+    const cls_ = cls ?? CHAR_CLASSES[0];
+    const prefix = classSkinPrefix(cls_.name, idx);
+    super(scene, x, y, prefix + '_idle_0');
+    this.cls = cls_;
     this.idx = idx;
-    this.cls = cls ?? CHAR_CLASSES[0];
-    this.prefix = skin.prefix;
+    this.prefix = prefix;
     this.facing = idx === 0 ? 1 : -1;
     this.hp = PLAYER_MAX_HP;
     this.isDead = false;

@@ -39,7 +39,7 @@ const ANIM_DEFS: AnimDef[] = [
 
 /** Registriert alle Phaser-Anims (boy1_idle, boy2_walk, ...). Fail-safe: fehlende Texturen werden übersprungen. */
 export function buildAnimations(scene: Phaser.Scene): void {
-  for (const prefix of ['boy1', 'boy2'] as const) {
+  for (const prefix of ['boy1', 'boy2', 'spd1', 'spd2', 'tnk1', 'tnk2', 'jmp1', 'jmp2'] as const) {
     for (const def of ANIM_DEFS) {
       const animKey = `${prefix}_${def.base}`;
       if (scene.anims.exists(animKey)) continue;
