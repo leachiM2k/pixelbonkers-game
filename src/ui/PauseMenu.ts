@@ -111,6 +111,7 @@ export class PauseMenu {
       this.close();
       this.callbacks.resume();
     });
+
   }
 
   close(): void {

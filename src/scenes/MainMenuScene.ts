@@ -24,6 +24,8 @@ interface MenuItem {
   label: () => string;
   run: () => void;
   status?: () => boolean | string;
+  /** Links/Rechts-Zyklus (Settings), falls unterstuetzt */
+  cycle?: (dir: 1 | -1) => void;
 }
 
 export class MainMenuScene extends Phaser.Scene {
@@ -161,7 +163,7 @@ export class MainMenuScene extends Phaser.Scene {
 
   private mainItems(): MenuItem[] {
     return [
-      { label: () => 'VS LOCAL', run: () => this.scene.start('BattleScene') },
+      { label: () => 'VS LOCAL', run: () => this.scene.start('BattleScene', { mode: 'local' }) },
       { label: () => 'VS CPU', run: () => this.scene.start('BattleScene', { mode: 'cpu' }) },
       { label: () => 'CHARACTERS', run: () => this.openCharsMenu() },
       { label: () => 'ONLINE', run: () => this.openOnlineMenu() },
@@ -188,11 +190,12 @@ export class MainMenuScene extends Phaser.Scene {
       {
         label: () => 'CPU LEVEL',
         status: () => ['EASY', 'MEDIUM', 'HARD'][settings.cpuLevel],
-        run: () => {
-          settings.cpuLevel = ((settings.cpuLevel + 1) % 3) as 0 | 1 | 2;
+        cycle: (dir) => {
+          settings.cpuLevel = ((settings.cpuLevel + dir + 3) % 3) as 0 | 1 | 2;
           saveSettings(settings);
           this.renderItems();
         },
+        run: () => this.cycleSetting(1),
       },
       { label: () => 'BACK', run: () => this.openMainMenu() },
     ];
@@ -308,7 +311,7 @@ export class MainMenuScene extends Phaser.Scene {
       const on = typeof statusVal === 'boolean' ? statusVal : null;
       const statusText = typeof statusVal === 'string' ? statusVal : null;
       const boxW = on === null && statusText === null ? 0 : on ? 20 : 26;
-      const rowW = boxW > 0 ? 106 : labelW;
+      const rowW = statusText !== null ? 124 : boxW > 0 ? 106 : labelW;
 
       if (selected) {
         const hl = this.add
@@ -320,10 +323,10 @@ export class MainMenuScene extends Phaser.Scene {
       this.rowObjects.push(t);
 
       if (statusText !== null) {
+        // linksbuendige Status-Spalte mit Abstand zum Label (kein Ueberlappen)
         this.rowObjects.push(
-          createPixelText(this, this.menuX + 106, y, statusText, {
+          createPixelText(this, this.menuX + 62, y, statusText, {
             scale: 1,
-            originX: 1,
             color: COLOR_GOLD,
           }),
         );
@@ -348,18 +351,34 @@ export class MainMenuScene extends Phaser.Scene {
     this.onlineMenu?.create(this, this.startNetBattle);
   }
 
+  private cycleSetting(dir: 1 | -1): void {
+    const item = this.items[this.selection];
+    if (item?.cycle) {
+      item.cycle(dir);
+      this.audio.play('menuSelect');
+    }
+  }
+
   private onLeft(): void {
-    if (this.menuMode !== 'chars' || this.selection > 1) return;
-    this.audio.play('menuSelect');
-    setCharSel(this.selection as 0 | 1, getCharSel(this.selection as 0 | 1) - 1);
-    this.renderItems();
+    if (this.menuMode === 'chars') {
+      if (this.selection > 1) return;
+      this.audio.play('menuSelect');
+      setCharSel(this.selection as 0 | 1, getCharSel(this.selection as 0 | 1) - 1);
+      this.renderItems();
+      return;
+    }
+    if (this.menuMode === 'settings') this.cycleSetting(-1);
   }
 
   private onRight(): void {
-    if (this.menuMode !== 'chars' || this.selection > 1) return;
-    this.audio.play('menuSelect');
-    setCharSel(this.selection as 0 | 1, getCharSel(this.selection as 0 | 1) + 1);
-    this.renderItems();
+    if (this.menuMode === 'chars') {
+      if (this.selection > 1) return;
+      this.audio.play('menuSelect');
+      setCharSel(this.selection as 0 | 1, getCharSel(this.selection as 0 | 1) + 1);
+      this.renderItems();
+      return;
+    }
+    if (this.menuMode === 'settings') this.cycleSetting(1);
   }
 
   private onUp(): void {

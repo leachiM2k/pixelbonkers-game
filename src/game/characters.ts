@@ -42,6 +42,20 @@ export function getCharSel(idx: 0 | 1): number {
   return sel[idx];
 }
 
+/** Klassen-Ring-Farbe fuer die sichtbare Unterscheidung im Kampf */
+export function classRingColor(name: string): number {
+  switch (name) {
+    case 'SPEEDY':
+      return 0xf8d848; // Gold
+    case 'TANK':
+      return 0xe04848; // Rot
+    case 'JUMPER':
+      return 0x7dd3fc; // Cyan
+    default:
+      return 0xf2f0e5; // Weiss (ALLROUNDER)
+  }
+}
+
 export function setCharSel(idx: 0 | 1, i: number): void {
   sel[idx] = ((i % CHAR_CLASSES.length) + CHAR_CLASSES.length) % CHAR_CLASSES.length;
   try {
