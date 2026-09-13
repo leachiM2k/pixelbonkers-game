@@ -4,6 +4,7 @@ import Phaser from 'phaser';
 import { EV, GAME_HEIGHT, GAME_WIDTH } from '../types';
 import { Player, safePlayAnim } from '../entities/Player';
 import { InputSystem, PlayerInput } from '../systems/input';
+import { CpuAi } from '../systems/cpuAi';
 import { FxSystem } from '../systems/fx';
 import { AudioSystem } from '../systems/audio';
 import { MusicSystem } from '../systems/music';
@@ -41,6 +42,7 @@ export class BattleScene extends Phaser.Scene {
   private paused = false;
   private players!: [Player, Player];
   private inputSystem!: InputSystem;
+  private cpuAi: CpuAi | null = null;
   private fx!: FxSystem;
   private audioS!: AudioSystem;
   private music!: MusicSystem;
@@ -117,6 +119,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private getInputFor(idx: 0 | 1): PlayerInput {
+    if (this.netCfg.mode === 'cpu' && idx === 1) return this.cpuAi ? this.cpuAi.getInput() : EMPTY_INPUT;
     if (this.netCfg.mode === 'host' && idx === 1) return this.remoteInput ?? EMPTY_INPUT;
     if (this.netCfg.mode === 'guest') return EMPTY_INPUT;
     return this.inputSystem.get(idx);
@@ -149,6 +152,14 @@ export class BattleScene extends Phaser.Scene {
     this.combat = new CombatSystem(this, this.players, this.fx, this.audioS, this.hud);
     this.weapons = new WeaponSystem(this, this.players, this.platforms, this.fx, this.audioS, this.hud, this.combat);
     this.combat.setWeaponDrop((p) => this.weapons.dropWeapon(p));
+    if (this.netCfg.mode === 'cpu') {
+      this.cpuAi = new CpuAi(this.players[1], this.players[0], {
+        groundWeapons: () => this.weapons.groundWeapons,
+        projectiles: () => this.weapons.activeProjectiles,
+        traps: () => this.weapons.activeTraps,
+        now: () => this.time.now,
+      });
+    }
     this.physics.add.collider(this.players[0], this.platforms);
     this.physics.add.collider(this.players[1], this.platforms);
     this.hud.updateHp(0, this.players[0].hp);
@@ -206,12 +217,23 @@ export class BattleScene extends Phaser.Scene {
     // Dev/Test-Probe: Live-State fuer E2E-Tests (read-only)
     (window as unknown as Record<string, unknown>).__PB_STATE = () => ({
       phase: this.phase,
-      p: this.players.map((pl) => ({ x: Math.round(pl.x), hp: pl.hp, dead: pl.isDead })),
+      cpu: this.netCfg.mode === 'cpu',
+      p: this.players.map((pl) => ({
+        x: Math.round(pl.x),
+        hp: pl.hp,
+        dead: pl.isDead,
+        held: pl.heldWeapon,
+      })),
     });
     // Dev/Test-Probe: Waffen-System fuer deterministische E2E-Tests
     (window as unknown as Record<string, unknown>).__PB_WS = () => ({
       ws: this.weapons,
       players: this.players,
+      cpu: this.cpuAi ? this.cpuAi.debug : null,
+      busy: this.players.map((p) => ({
+        c: this.combat.isBusy(p),
+        w: this.weapons.isBusy(p),
+      })),
     });
     if (this.netCfg.mode === 'guest') {
       this.hud.showCenterText('WAITING FOR HOST...', 0xf2f0e5);
@@ -242,6 +264,7 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
     if (this.phase === 'fight') {
+      this.cpuAi?.update(delta);
       for (const p of this.players) {
         const inp = this.getInputFor(p.idx);
         if (this.combat.isBusy(p) || this.weapons.isBusy(p)) continue;
@@ -551,7 +574,7 @@ export class BattleScene extends Phaser.Scene {
       p2: { x: 0, y: 0 },
       hp: [PLAYER_MAX_HP, PLAYER_MAX_HP],
     };
-    if (this.netCfg.mode !== 'local' && !this.netSession) {
+    if (this.netCfg.mode !== 'local' && this.netCfg.mode !== 'cpu' && !this.netSession) {
       this.attachNetSession(new NetSessionImpl(this.netCfg.mode, this.netCfg.roomCode));
     }
   }

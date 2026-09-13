@@ -2,7 +2,7 @@
 // NET-UI und BattleScene konsumieren ausschliesslich diese Typen).
 import { PlayerInput } from '../systems/input';
 
-export type NetMode = 'local' | 'host' | 'guest';
+export type NetMode = 'local' | 'host' | 'guest' | 'cpu';
 
 export interface NetBattleConfig {
   mode: NetMode;

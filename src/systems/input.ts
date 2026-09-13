@@ -36,7 +36,7 @@ export const KEYMAP: Record<0 | 1, PlayerKeyMap> = {
 type ActionKey = keyof PlayerKeyMap;
 type KeySet = Partial<Record<ActionKey, Phaser.Input.Keyboard.Key>>;
 
-function emptyInput(): PlayerInput {
+export function emptyInput(): PlayerInput {
   return {
     left: false, right: false, up: false, down: false,
     melee: false, weapon: false, special: false,

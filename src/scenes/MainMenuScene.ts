@@ -157,6 +157,7 @@ export class MainMenuScene extends Phaser.Scene {
   private mainItems(): MenuItem[] {
     return [
       { label: () => 'VS LOCAL', run: () => this.scene.start('BattleScene') },
+      { label: () => 'VS CPU', run: () => this.scene.start('BattleScene', { mode: 'cpu' }) },
       { label: () => 'ONLINE', run: () => this.openOnlineMenu() },
       { label: () => 'SETTINGS', run: () => this.openSettings() },
       { label: () => 'CONTROLS', run: () => this.controls.create(this) },
